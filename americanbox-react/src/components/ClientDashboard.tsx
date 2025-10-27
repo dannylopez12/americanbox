@@ -19,14 +19,11 @@ import {
   RefreshCw,
   Lock,
   Edit,
-  Phone,
-  Mail,
   Calendar,
   MapPin as LocationIcon,
   TrendingUp,
   Clock,
   CheckCircle,
-  AlertCircle,
   Save,
 } from "lucide-react";
 import { api } from "../lib/api";

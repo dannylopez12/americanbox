@@ -97,7 +97,7 @@ export default function AdminClaims() {
     load();
   }, [load]);
 
-  useAutoRefresh(load, 30000);
+  useAutoRefresh(load, { delay: 30000 });
 
   const openResponse = (complaint: ComplaintRow) => {
     setSelectedComplaint(complaint);
