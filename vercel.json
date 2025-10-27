@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "name": "americanbox",
+  "builds": [
+    {
+      "src": "americanbox-api/server.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "americanbox-react/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/americanbox-api/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/americanbox-react/dist/$1"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "functions": {
+    "americanbox-api/server.js": {
+      "maxDuration": 30
+    }
+  }
+}
