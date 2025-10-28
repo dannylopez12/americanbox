@@ -37,7 +37,7 @@ export default function AdminOrders() {
   const [showNewOrderModal, setShowNewOrderModal] = useState(false);
   const [newOrderForm, setNewOrderForm] = useState({
     guide: "",
-    user_id: "",
+    client_name: "",
     status: "Pre alerta",
     total: "",
     weight_lbs: "",
@@ -206,7 +206,7 @@ export default function AdminOrders() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           guide: newOrderForm.guide,
-          user_id: parseInt(newOrderForm.user_id) || null,
+          client_name: newOrderForm.client_name,
           status: newOrderForm.status,
           total: parseFloat(newOrderForm.total) || 0,
           weight_lbs: parseFloat(newOrderForm.weight_lbs) || null,
@@ -215,13 +215,13 @@ export default function AdminOrders() {
           location: newOrderForm.location || null
         })
       });
-      
+
       if (response?.ok) {
         alert('Pedido creado exitosamente');
         setShowNewOrderModal(false);
         setNewOrderForm({
           guide: "",
-          user_id: "",
+          client_name: "",
           status: "Pre alerta",
           total: "",
           weight_lbs: "",
@@ -642,15 +642,15 @@ export default function AdminOrders() {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    ID Usuario *
+                    Nombre de Cliente *
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     required
-                    value={newOrderForm.user_id}
-                    onChange={(e) => setNewOrderForm(prev => ({ ...prev, user_id: e.target.value }))}
+                    value={newOrderForm.client_name}
+                    onChange={(e) => setNewOrderForm(prev => ({ ...prev, client_name: e.target.value }))}
                     className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    placeholder="ID del usuario"
+                    placeholder="Nombre del cliente"
                   />
                 </div>
 
