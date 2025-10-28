@@ -6,6 +6,7 @@ const bcrypt = require('bcryptjs');
 function createPool() {
   return mysql.createPool({
     host: process.env.DB_HOST,
+    port: process.env.DB_PORT || 3306,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
@@ -13,6 +14,7 @@ function createPool() {
     charset: 'utf8mb4_unicode_ci',
     acquireTimeout: 30000,
     timeout: 30000,
+    ssl: false
   });
 }
 
