@@ -22,7 +22,6 @@ export default defineConfig({
       }
     }
   },
-  base: './',
   server: {
     proxy: {
       // React -> /api/...  ==>  http://localhost:4000/api/...

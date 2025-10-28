@@ -1,9 +1,14 @@
 {
   "version": 2,
   "name": "americanbox",
-  "buildCommand": "cd americanbox-react && npm install && npm run build",
-  "outputDirectory": "americanbox-react/dist",
   "builds": [
+    {
+      "src": "americanbox-react/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
     {
       "src": "americanbox-api/server.js",
       "use": "@vercel/node"
@@ -15,8 +20,12 @@
       "dest": "/americanbox-api/server.js"
     },
     {
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg))",
+      "dest": "/americanbox-react/dist/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/americanbox-react/dist/index.html"
     }
   ],
   "env": {
