@@ -233,9 +233,9 @@ export default function AdminAddresses() {
       };
 
       if (editing) {
-        await api(`/api/admin/addresses/${editing.id}`, { method: "PUT", json: payload });
+  await api(`/api.php/api/admin/addresses/${editing.id}`, { method: "PUT", json: payload });
       } else {
-        await api(`/api/admin/addresses`, { method: "POST", json: payload });
+  await api(`/api.php/api/admin/addresses`, { method: "POST", json: payload });
       }
       setShowForm(false);
       setForm(emptyForm);
@@ -251,7 +251,7 @@ export default function AdminAddresses() {
     if (!confirm(`¿Eliminar la dirección del cliente "${addr.customer_name}"?`)) return;
     setDeletingId(addr.id);
     try {
-      await api(`/api/admin/addresses/${addr.id}`, { method: "DELETE" });
+  await api(`/api.php/api/admin/addresses/${addr.id}`, { method: "DELETE" });
       await load(pager.page);
     } catch (error: any) {
       alert(error?.message ?? "No se pudo eliminar la dirección.");

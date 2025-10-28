@@ -43,7 +43,7 @@ export default function AdminAccountsReceivable(){
 
   useEffect(()=>{ load(1); },[load]);
 
-  async function eliminar(a:Account){ if(!confirm(`Eliminar registro #${a.id}?`)) return; await api(`/api/admin/accounts-receivable/${a.id}`, {method:'DELETE'}); await load(pager.page); }
+  async function eliminar(a:Account){ if(!confirm(`Eliminar registro #${a.id}?`)) return; await api(`/api.php/api/admin/accounts-receivable/${a.id}`, {method:'DELETE'}); await load(pager.page); }
 
   async function guardarNuevo(){
     if(!newItem.invoice_number || !newItem.client_name){
@@ -52,7 +52,7 @@ export default function AdminAccountsReceivable(){
     }
     setLoading(true);
     try{
-      const r = await api('/api/admin/accounts-receivable',{ method:'POST', json:newItem });
+  const r = await api('/api.php/api/admin/accounts-receivable',{ method:'POST', json:newItem });
       if(!r?.ok) throw new Error(r?.error||'Error');
       setShowNew(false);
       setNewItem({invoice_number:'', client_name:'', debt:0, balance:0});

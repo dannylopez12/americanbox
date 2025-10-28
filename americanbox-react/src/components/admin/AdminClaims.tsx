@@ -121,7 +121,7 @@ export default function AdminClaims() {
 
     setSaving(true);
     try {
-      const r = await api(`/api/admin/complaints/${selectedComplaint.id}/respond`, {
+  const r = await api(`/api.php/api/admin/complaints/${selectedComplaint.id}/respond`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -145,7 +145,7 @@ export default function AdminClaims() {
 
   const onUpdateStatus = async (complaintId: number, newStatus: string) => {
     try {
-      const r = await api(`/api/admin/complaints/${complaintId}/status`, {
+  const r = await api(`/api.php/api/admin/complaints/${complaintId}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),

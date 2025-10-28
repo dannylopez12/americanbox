@@ -17,7 +17,7 @@ export default function PostLoginRedirect() {
     let mounted = true;
     (async () => {
       // tu API Node: /api/auth/me (si sigues con PHP usa el endpoint equivalente)
-      const me = await api<MeResponse>("/api/auth/me", { method: "GET" });
+  const me = await api<MeResponse>("/api.php/api/auth/me", { method: "GET" });
 
       if (!mounted) return;
 

@@ -60,11 +60,11 @@ export default function AdminCustomers() {
     if (!form.names.trim()) return;
     setSaving(true);
     if (editing) {
-      await api(`/api/admin/customers/${editing.id}`, { method:"PUT", json: {
+  await api(`/api.php/api/admin/customers/${editing.id}`, { method:"PUT", json: {
         ...form,
       }});
     } else {
-      await api(`/api/admin/customers`, { method:"POST", json: {
+  await api(`/api.php/api/admin/customers`, { method:"POST", json: {
         ...form,
       }});
     }
@@ -75,7 +75,7 @@ export default function AdminCustomers() {
 
   async function onDelete(c:Customer) {
     if (!confirm(`¿Eliminar al cliente "${c.names}"?`)) return;
-    await api(`/api/admin/customers/${c.id}`, { method:"DELETE" });
+  await api(`/api.php/api/admin/customers/${c.id}`, { method:"DELETE" });
     await load(pager.page);
   }
 

@@ -32,7 +32,7 @@ export default function LoginDifferent() {
     setLoading(true);
     setErr(null);
 
-    const res = await api<LoginResponse>("/api/login", {
+  const res = await api<LoginResponse>("/api.php/api/login", {
       method: "POST",
       json: { username: user, password: pass, adminMode: isAdminMode },
     });

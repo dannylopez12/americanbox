@@ -479,7 +479,7 @@ export default function AdminDashboard() {
         <div className="px-3 py-3 border-t border-white/10">
           <button
             onClick={async () => {
-              await api("/api/logout", { method: "POST" });
+              await api("/api.php/api/logout", { method: "POST" });
               window.location.href = "/#login";
             }}
             className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 hover:bg-white/20 px-3 py-2"

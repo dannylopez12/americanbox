@@ -77,7 +77,7 @@ export default function AdminCreditNotes() {
 
   async function eliminar(note: CreditNote) {
     if (!confirm(`Eliminar nota de credito ${note.number}?`)) return;
-    await api(`/api/admin/credit-notes/${note.id}`, { method: "DELETE" });
+  await api(`/api.php/api/admin/credit-notes/${note.id}`, { method: "DELETE" });
     await load(pager.page);
   }
 
@@ -95,7 +95,7 @@ export default function AdminCreditNotes() {
         register_date: newItem.register_date || undefined,
         total: newItem.total ?? 0,
       };
-      const r = await api("/api/admin/credit-notes", { method: "POST", json: payload });
+  const r = await api("/api.php/api/admin/credit-notes", { method: "POST", json: payload });
       if (!r || !(r as any).ok) throw new Error((r as any)?.error || "Error creando nota de credito");
       setShowNew(false);
       setNewItem({ number: "", client_name: "", total: 0 });

@@ -163,9 +163,9 @@ export default function AdminOrderStatuses() {
     try {
       const payload = { status: form.status, description: form.description.trim() || null };
       if (editing) {
-        await api(`/api/admin/orders/${selectedOrder}/statuses/${editing.id}`, { method: "PUT", json: payload });
+  await api(`/api.php/api/admin/orders/${selectedOrder}/statuses/${editing.id}`, { method: "PUT", json: payload });
       } else {
-        await api(`/api/admin/orders/${selectedOrder}/statuses`, { method: "POST", json: payload });
+  await api(`/api.php/api/admin/orders/${selectedOrder}/statuses`, { method: "POST", json: payload });
       }
       setShowForm(false);
       setForm(emptyForm);
@@ -182,7 +182,7 @@ export default function AdminOrderStatuses() {
     if (!confirm("¿Eliminar este estado del pedido?")) return;
     setDeletingId(row.id);
     try {
-      await api(`/api/admin/orders/${selectedOrder}/statuses/${row.id}`, { method: "DELETE" });
+  await api(`/api.php/api/admin/orders/${selectedOrder}/statuses/${row.id}`, { method: "DELETE" });
       await loadStatuses(pager.page);
     } catch (error: any) {
       alert(error?.message ?? "No se pudo eliminar.");

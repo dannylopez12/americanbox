@@ -118,7 +118,7 @@ export default function AdminOrders() {
 
   const loadProviders = useCallback(async () => {
     try {
-      const response = await api('/api/admin/providers');
+  const response = await api('/api.php/api/admin/providers');
       if (response?.ok && response.providers) {
         setProviders(response.providers);
       }
@@ -186,7 +186,7 @@ export default function AdminOrders() {
     if (!confirm(`¿Estás seguro de eliminar el pedido ${order.guide}?`)) return;
     
     try {
-      const response = await api(`/api/admin/orders/${order.id}`, { method: 'DELETE' });
+  const response = await api(`/api.php/api/admin/orders/${order.id}`, { method: 'DELETE' });
       if (response?.ok) {
         alert('Pedido eliminado exitosamente');
         await load(pager.page);
@@ -201,7 +201,7 @@ export default function AdminOrders() {
 
   const createOrder = async () => {
     try {
-      const response = await api('/api/admin/orders', {
+  const response = await api('/api.php/api/admin/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -243,7 +243,7 @@ export default function AdminOrders() {
     if (!editingOrder) return;
     
     try {
-      const response = await api(`/api/admin/orders/${editingOrder.id}`, {
+  const response = await api(`/api.php/api/admin/orders/${editingOrder.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -284,7 +284,7 @@ export default function AdminOrders() {
 
   const printLabel = async (order: OrderRow) => {
     try {
-      const response = await api(`/api/admin/orders/${order.id}/print-label`);
+  const response = await api(`/api.php/api/admin/orders/${order.id}/print-label`);
       if (response?.ok && response.html) {
         // Create a new window and write the HTML content
         const printWindow = window.open('', '_blank');

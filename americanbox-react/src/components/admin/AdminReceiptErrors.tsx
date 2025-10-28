@@ -41,7 +41,7 @@ export default function AdminReceiptErrors(){
     setLastUpdated(Date.now());
   }
 
-  async function eliminar(r:ReceiptError){ if(!confirm(`¿Eliminar registro ${r.id}?`)) return; await api(`/api/admin/receipt-errors/${r.id}`, { method:"DELETE" }); await load(pager.page); }
+  async function eliminar(r:ReceiptError){ if(!confirm(`¿Eliminar registro ${r.id}?`)) return; await api(`/api.php/api/admin/receipt-errors/${r.id}`, { method:"DELETE" }); await load(pager.page); }
 
   // No crear desde interfaz: view-only
   useAutoRefresh(() => load(pager.page), {
