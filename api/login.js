@@ -1,19 +1,20 @@
 // Endpoint de login para Vercel Serverless Functions
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
-const session = require('express-session');
 
 // Pool de conexión MySQL
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  connectionLimit: 10,
-  charset: 'utf8mb4_unicode_ci',
-  acquireTimeout: 60000,
-  timeout: 60000,
-});
+function createPool() {
+  return mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    connectionLimit: 5,
+    charset: 'utf8mb4_unicode_ci',
+    acquireTimeout: 30000,
+    timeout: 30000,
+  });
+}
 
 export default async function handler(req, res) {
   // Configurar CORS
@@ -29,7 +30,19 @@ export default async function handler(req, res) {
     return res.status(405).json({ ok: false, error: 'Método no permitido' });
   }
 
+  let pool = null;
+  let conn = null;
+
   try {
+    // Verificar variables de entorno
+    if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_NAME) {
+      console.error('❌ Variables de entorno faltantes');
+      return res.status(500).json({ 
+        ok: false, 
+        error: 'Configuración de base de datos incompleta' 
+      });
+    }
+
     const { username, password } = req.body;
 
     if (!username || !password) {
@@ -39,7 +52,10 @@ export default async function handler(req, res) {
       });
     }
 
-    const conn = await pool.getConnection();
+    console.log('🔍 Intentando login para:', username);
+
+    pool = createPool();
+    conn = await pool.getConnection();
     
     try {
       // Buscar usuario
@@ -79,14 +95,26 @@ export default async function handler(req, res) {
       });
 
     } finally {
-      conn.release();
+      if (conn) conn.release();
+      if (pool) await pool.end();
     }
 
   } catch (error) {
     console.error('❌ Error en login:', error);
+    console.error('Stack trace:', error.stack);
+    
+    // Limpiar conexiones en caso de error
+    try {
+      if (conn) conn.release();
+      if (pool) await pool.end();
+    } catch (cleanupError) {
+      console.error('Error en cleanup:', cleanupError);
+    }
+    
     return res.status(500).json({ 
       ok: false, 
-      error: 'Error interno del servidor' 
+      error: 'Error interno del servidor',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 }
