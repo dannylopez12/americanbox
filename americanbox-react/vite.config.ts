@@ -8,6 +8,7 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     minify: true,
+    assetsDir: 'static',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -18,6 +19,7 @@ export default defineConfig({
       }
     }
   },
+  base: './',
   server: {
     proxy: {
       // React -> /api/...  ==>  http://localhost:4000/api/...
