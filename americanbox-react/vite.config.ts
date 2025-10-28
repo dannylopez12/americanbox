@@ -9,12 +9,15 @@ export default defineConfig({
     sourcemap: false,
     minify: true,
     assetsDir: 'static',
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
           charts: ['recharts'],
-          icons: ['lucide-react']
+          icons: ['lucide-react'],
+          ui: ['framer-motion', '@headlessui/react']
         }
       }
     }
