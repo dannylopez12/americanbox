@@ -1,16 +1,29 @@
 {
-  "buildCommand": "cd americanbox-react && npm install && npx vite build",
-  "outputDirectory": "americanbox-react/dist",
-  "installCommand": "cd americanbox-react && npm install",
-  "functions": {
-    "api/**/*.js": {
-      "maxDuration": 30
-    }
-  },
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "src": "americanbox-react/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
     }
-  ]
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/americanbox-react/dist/index.html"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }
