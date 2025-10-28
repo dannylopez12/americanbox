@@ -337,37 +337,26 @@ app.post('/api/logout', (req, res) => {
   req.session.destroy(() => ok(res, { message: 'Logout OK' }));
 });
 
-// Servir archivos estáticos en producción
+// En Vercel, los archivos estáticos se manejan separadamente
+// Solo exponemos las rutas de API
 if (isProduction) {
-  const path = require('path');
-  
-  // Servir archivos estáticos del frontend
-  app.use(express.static(path.join(__dirname, './'), {
-    maxAge: '1d', // Cache por 1 día
-    etag: true,
-    lastModified: true
-  }));
-  
-  // Manejar rutas del frontend (SPA)
-  app.get('*', (req, res) => {
-    // No servir archivos de API como HTML
-    if (req.path.startsWith('/api/')) {
-      return res.status(404).json({ ok: false, error: 'Endpoint no encontrado' });
-    }
-    
-    res.sendFile(path.join(__dirname, 'index.html'), (err) => {
-      if (err) {
-        res.status(500).send('Error del servidor');
-      }
-    });
+  // Ruta catch-all para rutas API no encontradas
+  app.get('/api/*', (req, res) => {
+    res.status(404).json({ ok: false, error: 'Endpoint de API no encontrado' });
   });
 }
 
-app.listen(PORT, () => {
-  console.log(`🚀 AmericanBox API running on port ${PORT}`);
-  console.log(`📊 Environment: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
-  console.log(`🗄️  Database: ${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`);
-});
+// Para desarrollo local
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 AmericanBox API running on port ${PORT}`);
+    console.log(`📊 Environment: ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
+    console.log(`🗄️  Database: ${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`);
+  });
+}
+
+// Export para Vercel
+module.exports = app;
 
 // --- helpers de auth ---
 function requireAdmin(req, res, next) {

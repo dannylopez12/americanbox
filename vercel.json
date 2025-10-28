@@ -3,11 +3,12 @@
   "name": "americanbox",
   "buildCommand": "cd americanbox-react && npm install && npm run build",
   "outputDirectory": "americanbox-react/dist",
-  "functions": {
-    "americanbox-api/server.js": {
-      "maxDuration": 30
+  "builds": [
+    {
+      "src": "americanbox-api/server.js",
+      "use": "@vercel/node"
     }
-  },
+  ],
   "routes": [
     {
       "src": "/api/(.*)",
