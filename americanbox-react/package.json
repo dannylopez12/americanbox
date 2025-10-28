@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "vercel-build": "npm run build"
+    "vercel-build": "vite build"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",

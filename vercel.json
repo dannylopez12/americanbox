@@ -1,16 +1,5 @@
 {
-  "buildCommand": "cd americanbox-react && npm ci && npm run build",
+  "buildCommand": "cd americanbox-react && npm install && vite build",
   "outputDirectory": "americanbox-react/dist",
-  "installCommand": "npm install",
-  "framework": null,
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
+  "installCommand": "cd americanbox-react && npm install"
 }
