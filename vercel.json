@@ -1,5 +1,16 @@
 {
   "buildCommand": "cd americanbox-react && npm install && npx vite build",
   "outputDirectory": "americanbox-react/dist",
-  "installCommand": "cd americanbox-react && npm install"
+  "installCommand": "cd americanbox-react && npm install",
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    }
+  ]
 }
