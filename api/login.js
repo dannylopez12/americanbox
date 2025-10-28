@@ -85,13 +85,17 @@ export default async function handler(req, res) {
         });
       }
 
-      // Login exitoso
+      // Login exitoso - determinar redirect basado en rol
+      const isAdmin = Boolean(user.is_admin) || user.role === 'admin';
+      const redirect = isAdmin ? '/dashboard' : '/client';
+      
       return res.status(200).json({
         ok: true,
+        redirect: redirect,
         user: {
           id: user.id,
           username: user.username,
-          isAdmin: user.is_admin,
+          isAdmin: Boolean(user.is_admin),
           role: user.role
         }
       });
