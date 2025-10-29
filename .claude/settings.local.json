@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/danny.lopez/AppData/Local/Temp/fz3temp-2/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

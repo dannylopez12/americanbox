@@ -32,15 +32,15 @@ export default function LoginDifferent() {
     setLoading(true);
     setErr(null);
 
-  const res = await api<LoginResponse>("/api.php/api/login", {
+    const res = await api<LoginResponse>("/api/login", {
       method: "POST",
       json: { username: user, password: pass, adminMode: isAdminMode },
     });
-
+    console.log("Respuesta login:", res);
     setLoading(false);
 
-    if (!res || !(res as any).ok) {
-      setErr(((res as any)?.error) || "Respuesta no válida");
+    if (!res || res.ok !== true) {
+      setErr(res?.error || "Respuesta no válida");
       return;
     }
 

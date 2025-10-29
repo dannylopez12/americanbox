@@ -1,0 +1,6 @@
+open 45.152.46.128
+u582924658
+1532DAnILO
+cd public_html/americanbox
+put server-hostinger.js
+quit

@@ -200,7 +200,7 @@ export default function ClientDashboard() {
       setPasswordLoading(true);
       setPasswordMessage(null);
       
-  const response = await api('/api.php/api/client/change-password', {
+  const response = await api('/api/client/change-password', {
         method: 'PUT',
         body: JSON.stringify({
           currentPassword: passwordData.currentPassword,
@@ -227,7 +227,7 @@ export default function ClientDashboard() {
 
     try {
       setLoading(true);
-  const response = await api('/api.php/api/client/profile', {
+  const response = await api('/api/client/profile', {
         method: 'PUT',
         body: JSON.stringify({
           names: profile.names,
@@ -295,7 +295,7 @@ export default function ClientDashboard() {
             </div>
             <button
               onClick={async () => {
-                await api("/api.php/api/logout", { method: "POST" });
+                await api("/api/logout", { method: "POST" });
                 window.location.href = "/#login";
               }}
               className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 hover:bg-white/20 transition"

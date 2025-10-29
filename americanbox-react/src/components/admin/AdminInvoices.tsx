@@ -62,7 +62,7 @@ export default function AdminInvoices() {
 
   async function eliminar(i: Invoice) {
     if (!confirm(`¿Eliminar factura ${i.number}?`)) return;
-  await api(`/api.php/api/admin/invoices/${i.id}`, { method: "DELETE" });
+  await api(`/api/admin/invoices/${i.id}`, { method: "DELETE" });
     await load(pager.page);
   }
 
@@ -70,7 +70,7 @@ export default function AdminInvoices() {
     if (!newItem.number || !newItem.client_name) return alert('Rellena número y cliente');
     setLoading(true);
     try {
-  const r = await api(`/api.php/api/admin/invoices`, { method:'POST', json: newItem });
+  const r = await api(`/api/admin/invoices`, { method:'POST', json: newItem });
       if (!r?.ok) throw new Error(r?.error || 'Error');
       setShowNew(false);
       setNewItem({ number:'', client_name:'', total:0 });

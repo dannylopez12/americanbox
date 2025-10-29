@@ -37,13 +37,14 @@ export default function AdminOrders() {
   const [showNewOrderModal, setShowNewOrderModal] = useState(false);
   const [newOrderForm, setNewOrderForm] = useState({
     guide: "",
-    client_name: "",
+    user_id: "",
     status: "Pre alerta",
     total: "",
     weight_lbs: "",
     provider_id: "",
     tracking_code: "",
-    location: ""
+    location: "",
+    price_per_lb: ""
   });
   const [showEditOrderModal, setShowEditOrderModal] = useState(false);
   const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
@@ -58,6 +59,7 @@ export default function AdminOrders() {
     location: ""
   });
   const [providers, setProviders] = useState<{id: number; tracking_code: string; name: string}[]>([]);
+  const [users, setUsers] = useState<{id: number; username: string; names?: string; price_per_lb?: number}[]>([]);
   const [locationSettings, setLocationSettings] = useState<{
     defaultLocation: string;
     locations: {
@@ -118,7 +120,7 @@ export default function AdminOrders() {
 
   const loadProviders = useCallback(async () => {
     try {
-  const response = await api('/api.php/api/admin/providers');
+  const response = await api('/api/admin/providers');
       if (response?.ok && response.providers) {
         setProviders(response.providers);
       }
@@ -147,11 +149,29 @@ export default function AdminOrders() {
     }
   }, []);
 
+  const loadUsers = useCallback(async () => {
+    try {
+      console.log('🔍 Cargando usuarios...');
+      const response = await api('/api/admin/users');
+      console.log('📋 Respuesta de usuarios:', response);
+
+      if (response?.ok && response.items) {
+        console.log('✅ Usuarios cargados:', response.items.length);
+        setUsers(response.items);
+      } else {
+        console.log('❌ Respuesta inválida:', response);
+      }
+    } catch (error) {
+      console.error('❌ Error loading users:', error);
+    }
+  }, []);
+
   useEffect(() => {
     void load(1);
     void loadProviders();
     void loadLocationSettings();
-  }, [load, loadProviders, loadLocationSettings]);
+    void loadUsers();
+  }, [load, loadProviders, loadLocationSettings, loadUsers]);
 
   useAutoRefresh(() => load(pager.page), {
     deps: [pager.page, q, dateRange, statusFilter],
@@ -186,7 +206,7 @@ export default function AdminOrders() {
     if (!confirm(`¿Estás seguro de eliminar el pedido ${order.guide}?`)) return;
     
     try {
-  const response = await api(`/api.php/api/admin/orders/${order.id}`, { method: 'DELETE' });
+  const response = await api(`/api/admin/orders/${order.id}`, { method: 'DELETE' });
       if (response?.ok) {
         alert('Pedido eliminado exitosamente');
         await load(pager.page);
@@ -201,33 +221,35 @@ export default function AdminOrders() {
 
   const createOrder = async () => {
     try {
-  const response = await api('/api.php/api/admin/orders', {
+  const response = await api('/api/admin/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          guide: newOrderForm.guide,
-          client_name: newOrderForm.client_name,
+          guide: newOrderForm.guide || undefined, // Opcional, se genera automáticamente
+          user_id: parseInt(newOrderForm.user_id),
           status: newOrderForm.status,
           total: parseFloat(newOrderForm.total) || 0,
           weight_lbs: parseFloat(newOrderForm.weight_lbs) || null,
           provider_id: parseInt(newOrderForm.provider_id) || null,
           tracking_code: newOrderForm.tracking_code || null,
-          location: newOrderForm.location || null
+          location: newOrderForm.location || null,
+          price_per_lb: parseFloat(newOrderForm.price_per_lb) || null
         })
       });
 
       if (response?.ok) {
-        alert('Pedido creado exitosamente');
+        alert(`Pedido creado exitosamente. ${response.guide ? `Guía: ${response.guide}` : ''}`);
         setShowNewOrderModal(false);
         setNewOrderForm({
           guide: "",
-          client_name: "",
+          user_id: "",
           status: "Pre alerta",
           total: "",
           weight_lbs: "",
           provider_id: "",
           tracking_code: "",
-          location: ""
+          location: "",
+          price_per_lb: ""
         });
         await load(1);
       } else {
@@ -239,11 +261,33 @@ export default function AdminOrders() {
     }
   };
 
+  const updateOrderStatus = async (orderId: number, newStatus: string) => {
+    try {
+      const response = await api(`/api/admin/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (response?.ok) {
+        // Actualizar el estado local
+        setItems(prev => prev.map(item => 
+          item.id === orderId ? { ...item, status: newStatus } : item
+        ));
+      } else {
+        alert(response?.error || 'Error al actualizar el status');
+      }
+    } catch (error) {
+      console.error('Error actualizando status:', error);
+      alert('Error al actualizar el status');
+    }
+  };
+
   const updateOrder = async () => {
     if (!editingOrder) return;
     
     try {
-  const response = await api(`/api.php/api/admin/orders/${editingOrder.id}`, {
+  const response = await api(`/api/admin/orders/${editingOrder.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -284,7 +328,7 @@ export default function AdminOrders() {
 
   const printLabel = async (order: OrderRow) => {
     try {
-  const response = await api(`/api.php/api/admin/orders/${order.id}/print-label`);
+  const response = await api(`/api/admin/orders/${order.id}/print-label`);
       if (response?.ok && response.html) {
         // Create a new window and write the HTML content
         const printWindow = window.open('', '_blank');
@@ -530,7 +574,17 @@ export default function AdminOrders() {
                   <Td className="max-w-[200px] truncate">{row.comment ?? "—"}</Td>
                   <Td>{row.weight_lbs ?? "—"}</Td>
                   <Td>
-                    <StatusBadge status={row.status} options={stateOptions} />
+                    <select
+                      value={row.status || ""}
+                      onChange={(e) => updateOrderStatus(row.id, e.target.value)}
+                      className="w-full border border-slate-300 rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    >
+                      {stateOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </Td>
                   <Td>
                     <div className="flex items-center gap-1">
@@ -626,32 +680,61 @@ export default function AdminOrders() {
               </div>
               
               <form onSubmit={(e) => { e.preventDefault(); createOrder(); }} className="space-y-4">
-                <div>
+                <div style={{ display: 'none' }}>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Número de Guía *
+                    Número de Guía
                   </label>
                   <input
                     type="text"
-                    required
                     value={newOrderForm.guide}
                     onChange={(e) => setNewOrderForm(prev => ({ ...prev, guide: e.target.value }))}
                     className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    placeholder="Ingrese el número de guía"
+                    placeholder="Se generará automáticamente"
                   />
+                  <p className="text-xs text-slate-500 mt-1">
+                    El número de guía se genera automáticamente
+                  </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Nombre de Cliente *
+                    Usuario/Casillero *
+                  </label>
+                  <select
+                    required
+                    value={newOrderForm.user_id}
+                    onChange={(e) => setNewOrderForm(prev => ({ ...prev, user_id: e.target.value }))}
+                    className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <option value="">Seleccionar usuario</option>
+                    {console.log('👥 Usuarios en dropdown:', users)}
+                    {users.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.names || user.username} {user.price_per_lb ? `(Precio: $${user.price_per_lb}/lb)` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Seleccione el usuario al que pertenece este pedido
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Precio por Libra (USD)
                   </label>
                   <input
-                    type="text"
-                    required
-                    value={newOrderForm.client_name}
-                    onChange={(e) => setNewOrderForm(prev => ({ ...prev, client_name: e.target.value }))}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={newOrderForm.price_per_lb}
+                    onChange={(e) => setNewOrderForm(prev => ({ ...prev, price_per_lb: e.target.value }))}
                     className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    placeholder="Nombre del cliente"
+                    placeholder="Ej: 5.50"
                   />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Precio personalizado por libra para este cliente. Si no se especifica, se usará el precio por defecto del sistema.
+                  </p>
                 </div>
 
                 <div>

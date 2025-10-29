@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd americanbox-react && npm install && npx vite build",
+  "buildCommand": "cd americanbox-react && npm install && npm run build",
   "outputDirectory": "americanbox-react/dist",
   "installCommand": "cd americanbox-react && npm install",
   "functions": {

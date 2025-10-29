@@ -177,9 +177,9 @@ export default function AdminSecurityUsers() {
       };
 
       if (editing) {
-  await api(`/api.php/api/admin/users/${editing.id}`, { method: "PUT", json: payload });
+  await api(`/api/admin/users/${editing.id}`, { method: "PUT", json: payload });
       } else {
-  await api(`/api.php/api/admin/users`, { method: "POST", json: payload });
+  await api(`/api/admin/users`, { method: "POST", json: payload });
       }
       setShowForm(false);
       void load(editing ? pager.page : 1);
@@ -193,18 +193,18 @@ export default function AdminSecurityUsers() {
 
   async function onDelete(user: AdminUser) {
     if (!confirm(`Eliminar al usuario "${user.names}"?`)) return;
-  await api(`/api.php/api/admin/users/${user.id}`, { method: "DELETE" });
+  await api(`/api/admin/users/${user.id}`, { method: "DELETE" });
     void load(pager.page);
   }
 
   async function onToggleActive(user: AdminUser) {
-  await api(`/api.php/api/admin/users/${user.id}/toggle`, { method: "POST" });
+  await api(`/api/admin/users/${user.id}/toggle`, { method: "POST" });
     void load(pager.page);
   }
 
   async function onResetPassword(user: AdminUser) {
     if (!confirm(`Enviar reseteo de contrasena a ${user.username}?`)) return;
-  await api(`/api.php/api/admin/users/${user.id}/reset-password`, { method: "POST" });
+  await api(`/api/admin/users/${user.id}/reset-password`, { method: "POST" });
     alert("Solicitud de reseteo enviada.");
   }
 

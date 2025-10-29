@@ -6,7 +6,9 @@ const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const multer = require('multer');
 const xlsx = require('xlsx');
-require('dotenv').config();
+require('dotenv').config({
+  path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env'
+});
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -27,9 +29,37 @@ const pool = mysql.createPool({
 
 // Configurar CORS según el entorno
 const corsOptions = {
-  origin: isProduction 
-    ? [process.env.CLIENT_URL, process.env.ALLOWED_ORIGINS].filter(Boolean)
-    : ['http://localhost:5173', 'http://localhost:5174'],
+  origin: isProduction
+    ? function (origin, callback) {
+        // Permitir requests sin origin (como mobile apps, curl, etc.)
+        if (!origin) return callback(null, true);
+
+        // En producción, permitir dominios de Hostinger y dominios configurados
+        const allowedOrigins = [
+          process.env.CLIENT_URL,
+          process.env.ALLOWED_ORIGINS,
+          /\.hostingersite\.com$/,  // Permitir cualquier subdominio de hostingersite.com
+          /^https?:\/\/localhost(:\d+)?$/,  // Permitir localhost con cualquier puerto
+        ].filter(Boolean);
+
+        // Verificar si el origin está permitido
+        const isAllowed = allowedOrigins.some(allowed => {
+          if (typeof allowed === 'string') {
+            return origin === allowed;
+          } else if (allowed instanceof RegExp) {
+            return allowed.test(origin);
+          }
+          return false;
+        });
+
+        if (isAllowed) {
+          callback(null, true);
+        } else {
+          console.log(`CORS rechazado para origin: ${origin}`);
+          callback(new Error('Not allowed by CORS'));
+        }
+      }
+    : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -789,11 +819,6 @@ app.post('/api/admin/orders', requireAdmin, async (req, res) => {
     console.log('🔍 Datos extraídos:', { guide, user_id, address_id, status, total, weight_lbs, provider_id, tracking_code, location });
     
     // Validaciones básicas
-    if (!guide || !guide.trim()) {
-      console.log('❌ Error: Número de guía requerido');
-      return res.status(400).json({ ok: false, error: 'Número de guía requerido' });
-    }
-    
     if (!user_id) {
       console.log('❌ Error: ID de usuario requerido');
       return res.status(400).json({ ok: false, error: 'ID de usuario requerido' });
@@ -802,11 +827,49 @@ app.post('/api/admin/orders', requireAdmin, async (req, res) => {
     console.log('🔍 Iniciando conexión a BD...');
     const conn = await pool.getConnection();
     try {
-      // Verificar que la guía no exista
-      console.log('🔍 Verificando si la guía existe:', guide.trim());
-      const [existing] = await conn.query('SELECT id FROM orders WHERE guide = ?', [guide.trim()]);
-      if (existing.length > 0) {
-        return res.status(400).json({ ok: false, error: 'Ya existe un pedido con ese número de guía' });
+      // Función para generar número de guía automático
+      const generateGuideNumber = async () => {
+        const year = new Date().getFullYear().toString().slice(-2);
+        const month = (new Date().getMonth() + 1).toString().padStart(2, '0');
+        const [lastOrder] = await conn.query(`
+          SELECT guide FROM orders 
+          WHERE guide LIKE ? 
+          ORDER BY id DESC LIMIT 1
+        `, [`ECABC${year}${month}%`]);
+        
+        let sequence = 1;
+        if (lastOrder.length > 0) {
+          const lastGuide = lastOrder[0].guide;
+          const match = lastGuide.match(/ECABC\d{4}(\d+)/);
+          if (match) {
+            sequence = parseInt(match[1]) + 1;
+          }
+        }
+        
+        const guide = `ECABC${year}${month}${sequence.toString().padStart(5, '0')}`;
+        
+        // Verificar que no exista (por si acaso)
+        const [existing] = await conn.query('SELECT id FROM orders WHERE guide = ?', [guide]);
+        if (existing.length > 0) {
+          // Si existe, incrementar y verificar de nuevo
+          sequence++;
+          return `ECABC${year}${month}${sequence.toString().padStart(5, '0')}`;
+        }
+        return guide;
+      };
+
+      // Generar guía si no se proporciona
+      let finalGuide = guide;
+      if (!finalGuide || !finalGuide.trim()) {
+        finalGuide = await generateGuideNumber();
+        console.log('🎫 Guía generada automáticamente:', finalGuide);
+      } else {
+        // Verificar que la guía no exista si se proporciona manualmente
+        console.log('🔍 Verificando si la guía existe:', finalGuide.trim());
+        const [existing] = await conn.query('SELECT id FROM orders WHERE guide = ?', [finalGuide.trim()]);
+        if (existing.length > 0) {
+          return res.status(400).json({ ok: false, error: 'Ya existe un pedido con ese número de guía' });
+        }
       }
       
       // Verificar que el usuario existe
@@ -863,7 +926,7 @@ app.post('/api/admin/orders', requireAdmin, async (req, res) => {
           created_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
       `, [
-        guide.trim(),
+        finalGuide.trim(),
         user_id,
         address_id,
         status || 'Pre alerta',
@@ -878,6 +941,7 @@ app.post('/api/admin/orders', requireAdmin, async (req, res) => {
         ok: true, 
         message: 'Pedido creado exitosamente',
         orderId: result.insertId,
+        guide: finalGuide,
         calculatedPrice: finalTotal !== total ? finalTotal : null
       });
     } finally { 
@@ -1177,6 +1241,44 @@ app.put('/api/admin/orders/:id', requireAdmin, async (req, res) => {
   } catch (e) {
     console.error('❌ PUT Error:', e);
     res.status(500).json({ ok: false, error: 'Error actualizando orden' });
+  }
+});
+
+// --------- ADMIN: Update order status ---------
+app.put('/api/admin/orders/:id/status', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!id || isNaN(Number(id))) {
+      return res.status(400).json({ ok: false, error: 'ID de orden inválido' });
+    }
+
+    if (!status || !status.trim()) {
+      return res.status(400).json({ ok: false, error: 'Status requerido' });
+    }
+
+    const conn = await pool.getConnection();
+    try {
+      // Verificar que la orden existe
+      const [orderCheck] = await conn.query('SELECT id FROM orders WHERE id = ?', [Number(id)]);
+      if (orderCheck.length === 0) {
+        return res.status(404).json({ ok: false, error: 'Orden no encontrada' });
+      }
+
+      // Actualizar solo el status
+      await conn.query('UPDATE orders SET status = ? WHERE id = ?', [status.trim(), Number(id)]);
+
+      res.json({ 
+        ok: true, 
+        message: 'Status de orden actualizado exitosamente'
+      });
+    } finally { 
+      conn.release(); 
+    }
+  } catch (e) {
+    console.error('❌ Error actualizando status:', e);
+    res.status(500).json({ ok: false, error: 'Error actualizando status de orden' });
   }
 });
 
