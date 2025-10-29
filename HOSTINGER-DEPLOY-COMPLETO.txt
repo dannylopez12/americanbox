@@ -1,0 +1,175 @@
+═══════════════════════════════════════════════════════════════
+   INSTRUCCIONES COMPLETAS - DEPLOY EN HOSTINGER
+═══════════════════════════════════════════════════════════════
+
+✅ ARCHIVOS YA CREADOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ server-hostinger.js - Servidor Express unificado con Firebase
+✅ package-hostinger.json - Dependencias para Hostinger
+✅ americanbox-react/ - Frontend React con Vite
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📦 PASO 1: BUILD DEL FRONTEND
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Abre PowerShell en la raíz del proyecto:
+
+cd C:\Users\SOMEP\Documents\americanbox
+
+2. Construye el frontend:
+
+cd americanbox-react
+npm install
+npm run build
+
+Esto creará la carpeta `dist` con los archivos estáticos.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌐 PASO 2: CONFIGURAR HOSTINGER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+A. ACCEDER AL PANEL
+1. Ve a: https://hpanel.hostinger.com/
+2. Inicia sesión
+3. Selecciona tu hosting
+4. Click en "Administrar"
+
+B. CONFIGURAR NODE.JS
+1. En el panel, busca "Node.js" o "Configuración Avanzada"
+2. Click en "Crear aplicación Node.js"
+3. Configuración:
+   - Versión de Node.js: 18.x o 20.x
+   - Modo de aplicación: Production
+   - Directorio raíz de la aplicación: /public_html
+   - Archivo de aplicación: server-hostinger.js
+   - Comando de inicio: node server-hostinger.js
+
+C. VARIABLES DE ENTORNO
+En la sección de variables de entorno, agrega:
+
+Nombre: FIREBASE_SERVICE_ACCOUNT_KEY
+Valor: [Ejecuta este comando en PowerShell para copiar]:
+
+Get-Content americanbox-e368b-firebase-adminsdk-fbsvc-763442ab42.json -Raw | Set-Clipboard
+
+Luego pega el contenido (Ctrl+V)
+
+Nombre: PORT
+Valor: 8080
+
+Nombre: STATIC_PATH
+Valor: /home/uXXXXXXXXX/domains/tu-dominio.com/public_html/dist
+
+Nombre: INDEX_PATH
+Valor: /home/uXXXXXXXXX/domains/tu-dominio.com/public_html/dist/index.html
+
+(Reemplaza uXXXXXXXXX y tu-dominio.com con tus valores reales)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📤 PASO 3: SUBIR ARCHIVOS A HOSTINGER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OPCIÓN A - FTP (Más Simple):
+
+1. En el panel de Hostinger, busca "File Manager" o "Administrador de archivos"
+2. Sube estos archivos/carpetas:
+   - server-hostinger.js → /public_html/
+   - package-hostinger.json → /public_html/package.json
+   - americanbox-react/dist/ → /public_html/dist/
+
+3. O usa FileZilla:
+   - Host: ftp.tu-dominio.com
+   - Usuario: [tu usuario FTP]
+   - Contraseña: [tu contraseña FTP]
+   - Puerto: 21
+
+OPCIÓN B - SSH (Recomendado si tienes acceso SSH):
+
+1. Conecta por SSH:
+   ssh u582924658@tu-dominio.com
+
+2. Clona tu repo:
+   cd /home/uXXXXXXXXX/domains/tu-dominio.com/public_html
+   git clone https://github.com/dannylopez12/americanbox.git .
+
+3. Instala dependencias del servidor:
+   cp package-hostinger.json package.json
+   npm install
+
+4. Construye el frontend:
+   cd americanbox-react
+   npm install
+   npm run build
+   cd ..
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 PASO 4: INICIAR LA APLICACIÓN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. En el panel de Hostinger, busca "Node.js"
+2. Click en tu aplicación
+3. Click en "Iniciar" o "Restart"
+4. Espera 10-20 segundos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ PASO 5: VERIFICAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Abre tu dominio en el navegador: http://tu-dominio.com
+
+2. Prueba el API health check: http://tu-dominio.com/api/health
+
+   Debería responder:
+   {
+     "ok": true,
+     "message": "Server is running",
+     "firebase": "connected"
+   }
+
+3. Prueba el login
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Error: "Cannot find module 'express'"
+├─ Causa: Dependencias no instaladas
+└─ Solución: Ejecuta npm install en el servidor
+
+Error: "Firebase no configurado"
+├─ Causa: FIREBASE_SERVICE_ACCOUNT_KEY no configurada
+└─ Solución: Verifica variables de entorno en el panel de Hostinger
+
+Error: "ENOENT: no such file or directory"
+├─ Causa: Rutas incorrectas
+└─ Solución: Actualiza STATIC_PATH y INDEX_PATH con las rutas correctas
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 NOTAS IMPORTANTES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Hostinger NO tiene límite de funciones serverless
+2. Tu servidor corre 24/7 (no es serverless)
+3. Puedes ver logs en tiempo real desde el panel
+4. El servidor se reinicia automáticamente si hay errores
+5. Actualizaciones: Sube archivos y reinicia la app
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 VENTAJAS DE HOSTINGER vs VERCEL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Sin límite de funciones
+✅ Servidor tradicional (más simple de entender)
+✅ Acceso SSH completo
+✅ Más barato para proyectos grandes
+✅ Control total del servidor
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

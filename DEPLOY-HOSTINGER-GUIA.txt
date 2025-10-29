@@ -1,0 +1,79 @@
+═══════════════════════════════════════════════════════════════
+   DEPLOY EN HOSTINGER - GUÍA COMPLETA
+═══════════════════════════════════════════════════════════════
+
+🎯 VENTAJAS DE HOSTINGER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Sin límite de funciones serverless
+✅ Node.js nativo (no serverless)
+✅ Más control sobre el servidor
+✅ Puedes usar un solo servidor Express
+✅ Base de datos incluida (MySQL/PostgreSQL)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📦 PASO 1: PREPARAR EL PROYECTO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Crear un servidor Express unificado (combina todos los endpoints)
+2. Construir el frontend
+3. Subir vía FTP o Git
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 PASO 2: CREAR SERVIDOR EXPRESS UNIFICADO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Voy a crear un archivo server.js que combine todos tus endpoints.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌐 PASO 3: CONFIGURAR EN HOSTINGER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Panel de Hostinger > Hosting > Administrar
+2. Configuración avanzada > Node.js
+3. Crear aplicación Node.js:
+   - Versión: 18.x o superior
+   - Directorio raíz: /public_html
+   - Entry point: server.js
+   
+4. Variables de entorno:
+   - Agregar FIREBASE_SERVICE_ACCOUNT_KEY
+   - Agregar VITE_FIREBASE_* (si las necesitas en el servidor)
+
+5. Instalar dependencias:
+   npm install
+
+6. Iniciar aplicación
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📤 PASO 4: SUBIR ARCHIVOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Opción A - FTP (Más fácil):
+1. Usa FileZilla o el File Manager de Hostinger
+2. Sube todos los archivos del proyecto
+3. Asegúrate de subir node_modules o ejecuta npm install en el servidor
+
+Opción B - Git (Recomendado):
+1. Conecta tu repo de GitHub
+2. Hostinger clonará automáticamente
+3. Configura auto-deploy en cada push
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ VENTAJAS vs VERCEL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ No límite de 12 funciones
+✅ Servidor tradicional más simple
+✅ Base de datos incluida
+✅ Más económico a largo plazo
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔥 TE VOY A CREAR EL SERVIDOR EXPRESS AHORA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Espera un momento mientras genero el código...
