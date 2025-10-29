@@ -1,46 +1,51 @@
 # Vercel Deployment Configuration
 
-## Environment Variables
+## 🚨 CRÍTICO: Variables de Entorno Requeridas
 
-Configure the following environment variables in your Vercel dashboard:
+**El login NO funcionará hasta que configures las variables de entorno en Vercel.**
 
-### Database Configuration
-```
-DB_HOST=your-hostinger-mysql-host
-DB_PORT=3306
-DB_USER=your-hostinger-username
-DB_PASSWORD=your-hostinger-password
-DB_NAME=your-database-name
-```
+### Pasos para configurar:
 
-### Application Configuration
+1. **Ve a Vercel Dashboard**: https://vercel.com/dashboard
+2. **Selecciona tu proyecto** `americanbox`
+3. **Ve a Settings** → **Environment Variables**
+4. **Agrega estas variables**:
+
 ```
+DB_HOST=tu-host-mysql-hostinger
+DB_USER=tu-usuario-mysql
+DB_PASSWORD=tu-password-mysql
+DB_NAME=tu-base-datos
 NODE_ENV=production
 ```
 
-## API Endpoints
+### Valores típicos para Hostinger:
+- **DB_HOST**: `154.49.142.XXX` (IP de tu servidor MySQL)
+- **DB_USER**: `u582924658` (tu usuario de Hostinger)
+- **DB_PASSWORD**: La contraseña que configuraste
+- **DB_NAME**: `u582924658_americanbox` (tu base de datos)
 
-After deployment, the following endpoints will be available:
+## Problemas Comunes
 
-- `GET/POST /api/test` - Test endpoint to verify API functionality
-- `POST /api/login` - User authentication endpoint
+### "Configuración de base de datos incompleta"
+- Falta configurar variables de entorno en Vercel
 
-## Troubleshooting
+### "Credenciales inválidas"
+- Usuario/contraseña incorrectos
+- Usuario no existe en tabla `users`
 
-1. **404 Error on /api/login**: Ensure the `api/login.js` file exists and is properly configured
-2. **Database Connection Error**: Verify all DB_* environment variables are set correctly
-3. **CORS Issues**: Check that CORS headers are properly configured in the API functions
+### No redirige después del login
+- Revisa consola del navegador (F12)
+- Backend debe devolver `redirect` correcto
 
 ## Testing
 
-You can test the API endpoints using:
-
 ```bash
-# Test API functionality
-curl https://your-vercel-url.vercel.app/api/test
+# Test API
+curl https://tu-app.vercel.app/api/test
 
-# Test login (replace with actual credentials)
-curl -X POST https://your-vercel-url.vercel.app/api/login \
+# Test login
+curl -X POST https://tu-app.vercel.app/api/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"your-username","password":"your-password"}'
+  -d '{"username":"admin","password":"tu-pass"}'
 ```
