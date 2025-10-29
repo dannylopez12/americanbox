@@ -1,7 +1,7 @@
 // src/lib/firebaseClient.ts
-import { initializeApp, getApps, getApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app'
+import { getAuth, type Auth } from 'firebase/auth'
+import { getFirestore, type Firestore } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
@@ -29,19 +29,14 @@ if (!isConfigComplete) {
 }
 
 // Inicializa Firebase solo si la configuración está completa
-let firebaseApp
-let auth
-let fdb
+let firebaseApp: FirebaseApp | null = null
+let auth: Auth | null = null
+let fdb: Firestore | null = null
 
 if (isConfigComplete) {
   firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
   auth = getAuth(firebaseApp)
   fdb = getFirestore(firebaseApp)
-} else {
-  // Exportar objetos dummy para evitar errores en build time
-  firebaseApp = null as any
-  auth = null as any
-  fdb = null as any
 }
 
 export { firebaseApp, auth, fdb }

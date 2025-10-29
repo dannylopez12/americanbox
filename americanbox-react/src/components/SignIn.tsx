@@ -76,14 +76,15 @@ export default function SignIn() {
     };
 
     try {
+      if (!auth || !fdb) {
+        throw new Error("Firebase no está configurado. Por favor, configura las variables de entorno.");
+      }
+
       // Crear usuario en Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
       const user = userCredential.user;
 
       // Guardar datos adicionales en Firestore
-      const tipoIdent = mapCodigoToTexto(form.tipoId) as
-        | "CEDULA" | "RUC" | "PASAPORTE" | "VENTA A CONSUMIDOR FINAL" | "IDENTIFICACION DEL EXTERIOR" | null;
-
       const userData = {
         names: form.nombres,
         email: form.email,
@@ -102,10 +103,14 @@ export default function SignIn() {
 
       await setDoc(doc(fdb, 'users', user.uid), userData);
 
-      setMsg("Registro exitoso");
-      window.location.href = "/login/different";
+      setMsg("✅ Registro exitoso. Redirigiendo...");
+      setTimeout(() => {
+        window.location.href = "/login/different";
+      }, 1000);
+      
     } catch (error: any) {
-      setErr(error.message || "Error registrando");
+      console.error("❌ Error en registro:", error);
+      setErr(error.message || "Error registrando usuario");
     } finally {
       setLoading(false);
     }

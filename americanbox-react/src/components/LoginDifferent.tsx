@@ -4,21 +4,6 @@ import { Eye, EyeOff, Lock, LogIn } from "lucide-react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../lib/firebaseClient";
 
-type LoginResponse = {
-  ok: boolean;
-  redirect?: string;
-  user?: {
-    id: number;
-    customer_id: number | null;
-    username: string;
-    names?: string | null;
-    email?: string | null;
-    is_admin: boolean;
-    role?: "admin" | "customer";
-  };
-  error?: string;
-};
-
 export default function LoginDifferent() {
   const [user, setUser] = useState("");
   const [pass, setPass] = useState("");
@@ -34,38 +19,26 @@ export default function LoginDifferent() {
     setErr(null);
 
     try {
+      if (!auth) {
+        throw new Error("Firebase no está configurado. Por favor, configura las variables de entorno.");
+      }
+
+      // Login con Firebase Auth
       await signInWithEmailAndPassword(auth, user, pass);
+      
       // Firebase Auth maneja la sesión automáticamente
-      // El hook useSession detectará el cambio
-      console.log("Login successful");
-      // Redirect se maneja en useSession o en el componente padre
+      console.log("✅ Login exitoso con Firebase");
+      
+      // Redirigir según el tipo de usuario (puedes obtener esto de Firestore si es necesario)
+      const isAdmin = isAdminMode; // O determinar desde Firestore
+      window.location.href = isAdmin ? "/dashboard" : "/client";
+      
     } catch (error: any) {
-      setErr(error.message || "Error en login");
+      console.error("❌ Error en login:", error);
+      setErr(error.message || "Error en login. Verifica tus credenciales.");
     } finally {
       setLoading(false);
     }
-  };
-
-      // Guardar información de sesión en localStorage
-      const sessionData = {
-        ok: true,
-        logged: true,
-        role: res.user?.role || (res.user?.is_admin ? 'admin' : 'customer'),
-        uid: res.user?.id,
-        customer_id: res.user?.customer_id || null,
-        username: res.user?.username
-      };
-      localStorage.setItem('americanbox_session', JSON.stringify(sessionData));
-      console.log('💾 Session saved to localStorage:', sessionData);
-
-      window.location.href = res.redirect;
-      return;
-    }
-
-    // Fallback si no hay redirect (no debería suceder)
-    console.warn("No redirect received from backend, using fallback logic");
-    const isAdmin = Boolean(res.user?.is_admin || res.user?.role === 'admin');
-    window.location.href = isAdmin ? "/dashboard" : "/client";
   };
 
   return (
