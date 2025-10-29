@@ -1,0 +1,123 @@
+===========================================
+   VARIABLES DE ENTORNO PARA VERCEL
+===========================================
+
+📋 COPIA Y PEGA ESTAS VARIABLES EN VERCEL DASHBOARD
+   Settings > Environment Variables
+
+===========================================
+1. FIREBASE_SERVICE_ACCOUNT_KEY
+===========================================
+TIPO: Secret
+ENVIRONMENTS: Production, Preview, Development
+
+VALOR:
+⚠️ Abre el archivo: americanbox-e368b-firebase-adminsdk-fbsvc-763442ab42.json
+⚠️ Copia TODO el contenido del archivo
+⚠️ Pégalo en Vercel en UNA SOLA LÍNEA
+
+Comando rápido (PowerShell):
+Get-Content americanbox-e368b-firebase-adminsdk-fbsvc-763442ab42.json -Raw | Set-Clipboard
+
+Esto copiará el JSON al portapapeles listo para pegar en Vercel.
+
+===========================================
+2. VITE_FIREBASE_API_KEY
+===========================================
+TIPO: Plain Text
+ENVIRONMENTS: Production, Preview, Development
+
+VALOR: 
+⚠️ VE A FIREBASE CONSOLE PARA OBTENER ESTE VALOR:
+1. https://console.firebase.google.com/
+2. Proyecto: americanbox-e368b
+3. Settings > Project Settings > General
+4. Your apps > Web app > Config
+5. Copia el valor de "apiKey"
+
+Ejemplo: AIzaSyBxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+===========================================
+3. VITE_FIREBASE_AUTH_DOMAIN
+===========================================
+TIPO: Plain Text
+ENVIRONMENTS: Production, Preview, Development
+
+VALOR:
+americanbox-e368b.firebaseapp.com
+
+===========================================
+4. VITE_FIREBASE_PROJECT_ID
+===========================================
+TIPO: Plain Text
+ENVIRONMENTS: Production, Preview, Development
+
+VALOR:
+americanbox-e368b
+
+===========================================
+5. VITE_FIREBASE_STORAGE_BUCKET
+===========================================
+TIPO: Plain Text
+ENVIRONMENTS: Production, Preview, Development
+
+VALOR:
+americanbox-e368b.firebasestorage.app
+
+===========================================
+6. VITE_FIREBASE_MESSAGING_SENDER_ID
+===========================================
+TIPO: Plain Text
+ENVIRONMENTS: Production, Preview, Development
+
+VALOR:
+⚠️ VE A FIREBASE CONSOLE PARA OBTENER ESTE VALOR:
+(mismo lugar que apiKey, busca "messagingSenderId")
+
+Ejemplo: 123456789012
+
+===========================================
+7. VITE_FIREBASE_APP_ID
+===========================================
+TIPO: Plain Text
+ENVIRONMENTS: Production, Preview, Development
+
+VALOR:
+⚠️ VE A FIREBASE CONSOLE PARA OBTENER ESTE VALOR:
+(mismo lugar que apiKey, busca "appId")
+
+Ejemplo: 1:123456789012:web:abcdef1234567890
+
+===========================================
+           PASOS SIGUIENTES
+===========================================
+
+1. Ve a Vercel Dashboard:
+   https://vercel.com/dashboard
+
+2. Selecciona: americanboxprueba1
+
+3. Settings > Environment Variables
+
+4. Agrega las 7 variables de arriba
+
+5. Después de agregar TODAS, ve a:
+   Deployments > [último deployment] > Redeploy
+
+6. Espera 2-3 minutos y prueba tu sitio
+
+===========================================
+         ¿DÓNDE OBTENER LOS VALORES?
+===========================================
+
+Firebase Console:
+https://console.firebase.google.com/project/americanbox-e368b/settings/general
+
+En "Your apps", si no tienes una Web app:
+1. Click en </> (Web icon)
+2. Nickname: "AmericanBox Web"
+3. NO marques Firebase Hosting
+4. Registrar app
+5. Copia los valores del firebaseConfig
+
+===========================================

@@ -1,39 +1,6 @@
 // /api/login.js
-import mysql from 'mysql2/promise';
+import { auth, db } from './firebase.js';
 import bcrypt from 'bcryptjs';
-
-// Cachear el pool de conexión (Vercel crea una nueva instancia por request si no se cachea)
-let pool;
-
-function getPool() {
-  if (!pool) {
-    if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_NAME) {
-      console.error('❌ Configuración de base de datos incompleta:', {
-        DB_HOST: process.env.DB_HOST ? 'SET' : 'NOT SET',
-        DB_USER: process.env.DB_USER ? 'SET' : 'NOT SET',
-        DB_PASSWORD: process.env.DB_PASSWORD ? 'SET' : 'NOT SET',
-        DB_NAME: process.env.DB_NAME ? 'SET' : 'NOT SET'
-      });
-      throw new Error('Configuración de base de datos incompleta - Verifica tus variables de entorno en Vercel');
-    }
-
-    pool = mysql.createPool({
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT || 3306,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      connectionLimit: 5,
-      charset: 'utf8mb4_unicode_ci',
-      connectTimeout: 10000,
-      acquireTimeout: 30000,
-      ssl: false
-    });
-
-    console.log('✅ Pool MySQL inicializado');
-  }
-  return pool;
-}
 
 export default async function handler(req, res) {
   // CORS headers
@@ -49,7 +16,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ ok: false, error: 'Método no permitido' });
   }
 
-  let conn;
   try {
     const { username, password } = req.body || {};
 
@@ -57,24 +23,29 @@ export default async function handler(req, res) {
       return res.status(400).json({ ok: false, error: 'Usuario y contraseña requeridos' });
     }
 
-    const pool = getPool();
-    conn = await pool.getConnection();
+    console.log('🔍 Intentando login para:', username);
 
-    const [rows] = await conn.execute(
-      'SELECT id, username, password_hash, is_admin, role FROM users WHERE username = ?',
-      [username]
-    );
+    // Buscar usuario en Firestore
+    const usersRef = db.collection('users');
+    const snapshot = await usersRef.where('username', '==', username).limit(1).get();
 
-    if (rows.length === 0) {
+    if (snapshot.empty) {
+      console.log('❌ Usuario no encontrado:', username);
       return res.status(401).json({ ok: false, error: 'Credenciales inválidas' });
     }
 
-    const user = rows[0];
-    const validPassword = await bcrypt.compare(password, user.password_hash);
+    const userDoc = snapshot.docs[0];
+    const user = { id: userDoc.id, ...userDoc.data() };
+
+    // Verificar contraseña
+    const validPassword = await bcrypt.compare(password, user.password_hash || user.password);
 
     if (!validPassword) {
+      console.log('❌ Contraseña incorrecta para:', username);
       return res.status(401).json({ ok: false, error: 'Credenciales inválidas' });
     }
+
+    console.log('✅ Login exitoso:', username);
 
     const isAdmin = Boolean(user.is_admin) || user.role === 'admin';
     const redirect = isAdmin ? '/dashboard' : '/client';
@@ -96,7 +67,5 @@ export default async function handler(req, res) {
       error: 'Error interno del servidor',
       details: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
-  } finally {
-    if (conn) conn.release();
   }
 }
