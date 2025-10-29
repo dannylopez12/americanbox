@@ -1,0 +1,11 @@
+ID,Guía,Proveedor,Cliente,Fecha registro,Comentario,Peso (lb),Estado,Ubicación,Total
+25,"CASILLERO-TEST-1761582271073","N/A","Usuario Prueba Casillero","2025-10-27","Sin comentarios",,"En proceso de entrega","Por defecto",10.50
+24,"TEST-PRICING-1761581889559","N/A","Danny Lopez","2025-10-27","Sin comentarios",,"En proceso de entrega","Por defecto",13.13
+23,"TRACKING-TEST-001","AMAZON","Danny Lopez","2025-10-27","Sin comentarios",,"Pre alerta","Por defecto",125.50
+21,"TEST123-UPDATED","N/A","Danny Lopez","2025-10-27","Sin comentarios",,"pre_alert","Por defecto",150.00
+11,"ECABC20250001","N/A","Danny Lopez","2025-10-22","Sin comentarios",,"En proceso de entrega","Por defecto",299.99
+15,"ECABC20250005","N/A","danny","2025-10-22","Sin comentarios",,"En espera de pago","Por defecto",12.99
+19,"ECABC20250009","N/A","Danny Lopez","2025-10-22","Sin comentarios",,"Pago aprobado","Por defecto",299.99
+20,"ECABC20250010","N/A","Danny Lopez","2025-10-22","Sin comentarios",,"Despacho","Por defecto",129.99
+12,"ECABC20250002","N/A","danny","2025-10-22","Sin comentarios",,"Captado en agencia","Por defecto",145.49
+16,"ECABC20250006","N/A","Danny Lopez","2025-10-22","Sin comentarios",,"Pago aprobado","Por defecto",49.99

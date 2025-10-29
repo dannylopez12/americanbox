@@ -1,0 +1,36 @@
+{
+  "name": "americanbox-vercel",
+  "version": "1.0.0",
+  "description": "AmericanBox - Sistema de Courier",
+  "main": "api/index.js",
+  "scripts": {
+    "build": "cd americanbox-react && npm ci && npm run build",
+    "dev": "cd americanbox-react && npm run dev",
+    "start": "node americanbox-api/server.js",
+    "setup-firebase": "node setup-firebase.js",
+    "check-migration": "node check-migration.js",
+    "diagnose-firebase": "node diagnose-firebase.js",
+    "test-permissions": "node test-permissions.js",
+    "test-firestore": "node test-firestore-access.js",
+    "deep-diagnose": "node deep-diagnose.js",
+    "migrate": "node migrate-to-firebase.js",
+    "test-firebase": "node test-firebase.js"
+  },
+  "dependencies": {
+    "basic-ftp": "^5.0.5",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.0",
+    "express-session": "^1.17.3",
+    "firebase-admin": "^13.5.0",
+    "multer": "^1.4.5-lts.1",
+    "mysql2": "^3.6.0",
+    "node-fetch": "^2.7.0",
+    "xlsx": "^0.18.5"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}
