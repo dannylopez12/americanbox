@@ -1,9 +1,11 @@
 // Test endpoint para verificar que las serverless functions funcionan
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
+  console.log('🧪 Test endpoint called');
+
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -14,8 +16,8 @@ export default async function handler(req, res) {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     database: {
-      host: process.env.DB_HOST || 'not configured',
-      database: process.env.DB_NAME || 'not configured'
+      host: process.env.DB_HOST ? 'configured' : 'not configured',
+      database: process.env.DB_NAME ? 'configured' : 'not configured'
     }
   });
 }
