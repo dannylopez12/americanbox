@@ -35,7 +35,7 @@ export default async function handler(req, res) {
       SELECT
         u.id,
         u.username,
-        u.names,
+        u.name,
         u.is_admin,
         u.created_at,
         u.last_login,
@@ -47,7 +47,7 @@ export default async function handler(req, res) {
 
     // Filtro de búsqueda - solo buscar en campos que sabemos que existen
     if (req.query.q) {
-      query += ` WHERE (u.username LIKE ? OR u.names LIKE ?)`;
+      query += ` WHERE (u.username LIKE ? OR u.name LIKE ?)`;
       const searchTerm = `%${req.query.q}%`;
       params.push(searchTerm, searchTerm);
     }
@@ -66,7 +66,7 @@ export default async function handler(req, res) {
     const countParams = [];
 
     if (req.query.q) {
-      countQuery += ` WHERE (username LIKE ? OR names LIKE ?)`;
+      countQuery += ` WHERE (username LIKE ? OR name LIKE ?)`;
       const searchTerm = `%${req.query.q}%`;
       countParams.push(searchTerm, searchTerm);
     }

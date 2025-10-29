@@ -37,11 +37,10 @@ export default async function handler(req, res) {
         o.total_amount,
         o.created_at,
         o.updated_at,
-        c.names as customer_name,
-        u.username as customer_username
+        c.name as customer_name,
+        c.email as customer_email
       FROM orders o
       LEFT JOIN customers c ON o.customer_id = c.id
-      LEFT JOIN users u ON o.customer_id = u.id
       ORDER BY o.created_at DESC
       LIMIT ?
     `, [limit]);
@@ -53,14 +52,12 @@ export default async function handler(req, res) {
     // Formatear respuesta
     const formattedOrders = orders.map(order => ({
       id: order.id,
-      tracking_number: order.tracking_number,
-      status: order.status,
-      total_amount: parseFloat(order.total_amount),
-      created_at: order.created_at,
-      updated_at: order.updated_at,
-      customer_name: order.customer_name || order.customer_username || 'N/A',
-      customer_email: null, // No existe en la consulta
-      items_count: 0 // Simplificado por ahora
+      guide: order.tracking_number || `ORD-${order.id}`,
+      client: order.customer_name || 'N/A',
+      address: 'N/A', // Simplificado
+      date: order.created_at,
+      total: order.total_amount,
+      status: order.status
     }));
 
     res.setHeader('Access-Control-Allow-Origin', '*');

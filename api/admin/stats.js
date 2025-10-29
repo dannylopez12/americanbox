@@ -114,25 +114,3 @@ export default async function handler(req, res) {
     });
   }
 }
-
-    const stats = {
-      customers: customersResult[0].count || 0,
-      products: productsResult[0].count || 0,
-      addresses: addressesResult[0].count || 0,
-      categories: categoriesResult[0].count || 0,
-      orderStats: orderStatsResult[0] || {}
-    };
-
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-    console.log('📊 Admin stats:', stats);
-    return res.status(200).json({ ok: true, ...stats });
-
-  } catch (error) {
-    console.error('📊 Admin stats error:', error);
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    return res.status(500).json({ error: 'Internal server error', ok: false });
-  }
-}
