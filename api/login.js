@@ -50,10 +50,15 @@ module.exports = async function handler(req, res) {
   try {
     // Verificar variables de entorno
     if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_NAME) {
-      console.error('❌ Variables de entorno faltantes');
+      console.error('❌ Variables de entorno faltantes:', {
+        DB_HOST: !!process.env.DB_HOST,
+        DB_USER: !!process.env.DB_USER,
+        DB_PASSWORD: !!process.env.DB_PASSWORD,
+        DB_NAME: !!process.env.DB_NAME
+      });
       return res.status(500).json({ 
         ok: false, 
-        error: 'Configuración de base de datos incompleta' 
+        error: 'Configuración de base de datos incompleta - verifica variables de entorno en Vercel' 
       });
     }
 

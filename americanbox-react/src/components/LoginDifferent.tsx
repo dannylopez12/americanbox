@@ -46,9 +46,13 @@ export default function LoginDifferent() {
 
     // Backend ya devuelve redirect correcto
     if (res.redirect) {
+      console.log("Redirecting to:", res.redirect);
       window.location.href = res.redirect;
       return;
     }
+
+    // Fallback si no hay redirect (no debería suceder)
+    console.warn("No redirect received from backend, using fallback logic");
     const isAdmin = Boolean(res.user?.is_admin || res.user?.role === 'admin');
     window.location.href = isAdmin ? "/dashboard" : "/client";
   };
