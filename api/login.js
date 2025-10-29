@@ -60,13 +60,14 @@ module.exports = async function handler(req, res) {
     const { username, password } = req.body;
 
     if (!username || !password) {
+      console.log('❌ Missing credentials');
       return res.status(400).json({ 
         ok: false, 
         error: 'Usuario y contraseña requeridos' 
       });
     }
 
-    console.log('🔍 Intentando login para:', username);
+    console.log('🔍 Attempting login for:', username);
 
     pool = createPool();
     conn = await pool.getConnection();
@@ -86,11 +87,14 @@ module.exports = async function handler(req, res) {
       }
 
       const user = users[0];
+      console.log('👤 User found:', { id: user.id, username: user.username, is_admin: user.is_admin, role: user.role });
       
       // Verificar contraseña
       const validPassword = await bcrypt.compare(password, user.password_hash);
+      console.log('🔐 Password validation result:', validPassword);
       
       if (!validPassword) {
+        console.log('❌ Invalid password for user:', username);
         return res.status(401).json({ 
           ok: false, 
           error: 'Credenciales inválidas' 
