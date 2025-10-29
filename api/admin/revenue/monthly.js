@@ -32,7 +32,7 @@ export default async function handler(req, res) {
         DATE_FORMAT(created_at, '%Y-%m') as month,
         YEAR(created_at) as year,
         MONTH(created_at) as month_num,
-        SUM(total_amount) as revenue,
+        SUM(total) as revenue,
         COUNT(*) as orders_count
       FROM orders
       WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)

@@ -34,7 +34,7 @@ export default async function handler(req, res) {
         o.id,
         o.tracking_number,
         o.status,
-        o.total_amount,
+        o.total,
         o.created_at,
         o.updated_at,
         c.name as customer_name,
@@ -56,7 +56,7 @@ export default async function handler(req, res) {
       client: order.customer_name || 'N/A',
       address: 'N/A', // Simplificado
       date: order.created_at,
-      total: order.total_amount,
+      total: order.total,
       status: order.status
     }));
 
