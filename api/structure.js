@@ -1,52 +1,43 @@
-const mysql = require('mysql2/promise');
+const { db } = require('./firebase');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  console.log('🔍 Checking database structure');
+  console.log('🔍 Checking Firestore structure');
 
   try {
-    // Conectar a la base de datos
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      port: process.env.DB_PORT || 3306,
-    });
+    // Obtener todas las collections
+    const collections = await db.listCollections();
+    const collectionNames = collections.map(col => col.id);
+    console.log('🔍 Available collections:', collectionNames);
 
-    console.log('🔍 DB connection established');
+    const collectionStructure = {};
 
-    // Obtener todas las tablas
-    const [tables] = await connection.execute("SHOW TABLES");
-    console.log('🔍 Available tables:', tables.map(t => Object.values(t)[0]));
+    // Verificar estructura de cada collection relevante
+    const relevantCollections = ['users', 'customers', 'products', 'categories', 'orders', 'addresses', 'vouchers'];
 
-    const tableStructure = {};
-
-    // Verificar estructura de cada tabla relevante
-    const relevantTables = ['users', 'customers', 'products', 'categories', 'orders', 'addresses', 'vouchers'];
-
-    for (const tableName of relevantTables) {
+    for (const collectionName of relevantCollections) {
       try {
-        const [columns] = await connection.execute(`DESCRIBE ${tableName}`);
-        tableStructure[tableName] = columns.map(col => ({
-          Field: col.Field,
-          Type: col.Type,
-          Null: col.Null,
-          Key: col.Key,
-          Default: col.Default,
-          Extra: col.Extra
-        }));
-        console.log(`🔍 ${tableName} columns:`, columns.map(c => c.Field));
+        const snapshot = await db.collection(collectionName).limit(1).get();
+        if (!snapshot.empty) {
+          const doc = snapshot.docs[0];
+          const data = doc.data();
+          collectionStructure[collectionName] = {
+            documentId: doc.id,
+            fields: Object.keys(data),
+            sampleData: data
+          };
+          console.log(`🔍 ${collectionName} fields:`, Object.keys(data));
+        } else {
+          collectionStructure[collectionName] = { message: 'Collection exists but is empty' };
+        }
       } catch (e) {
-        console.log(`🔍 Table ${tableName} error:`, e.message);
-        tableStructure[tableName] = { error: e.message };
+        console.log(`🔍 Collection ${collectionName} error:`, e.message);
+        collectionStructure[collectionName] = { error: e.message };
       }
     }
-
-    await connection.end();
 
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -54,8 +45,8 @@ module.exports = async function handler(req, res) {
 
     return res.status(200).json({
       ok: true,
-      tables: tables.map(t => Object.values(t)[0]),
-      structure: tableStructure
+      collections: collectionNames,
+      structure: collectionStructure
     });
 
   } catch (error) {

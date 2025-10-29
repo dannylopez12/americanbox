@@ -15,9 +15,8 @@ module.exports = async function handler(req, res) {
     message: 'AmericanBox API funcionando!',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    database: {
-      host: process.env.DB_HOST ? 'configured' : 'not configured',
-      database: process.env.DB_NAME ? 'configured' : 'not configured'
+    firebase: {
+      serviceAccount: process.env.FIREBASE_SERVICE_ACCOUNT_KEY ? 'configured' : 'not configured'
     }
   });
 }

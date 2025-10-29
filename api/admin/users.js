@@ -1,104 +1,59 @@
-const mysql = require('mysql2/promise');
+const { db } = require('../firebase');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  console.log('👥 Getting admin users');
+  console.log('👥 Getting admin users from Firestore');
 
   try {
-    console.log('👥 DB Config:', {
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      database: process.env.DB_NAME,
-      port: process.env.DB_PORT || 3306,
-    });
-
-    // Conectar a la base de datos
-    const connection = await mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      port: process.env.DB_PORT || 3306,
-    });
-
-    console.log('👥 DB connection established');
-
     // Obtener usuarios con paginación
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
 
-    let query = `
-      SELECT
-        u.id,
-        u.username,
-        u.email,
-        u.full_name,
-        u.phone,
-        u.is_admin,
-        u.role,
-        u.created_at,
-        u.last_login,
-        u.active
-      FROM users u
-    `;
+    let query = db.collection('users').orderBy('created_at', 'desc');
 
-    const params = [];
-
-    // Filtro de búsqueda - solo buscar en campos que sabemos que existen
+    // Filtro de búsqueda
     if (req.query.q) {
-      query += ` WHERE (u.username LIKE ? OR u.email LIKE ? OR u.full_name LIKE ?)`;
-      const searchTerm = `%${req.query.q}%`;
-      params.push(searchTerm, searchTerm, searchTerm);
+      // Firestore no soporta LIKE directamente, usar where con >= y <= para prefix search
+      const searchTerm = req.query.q.toLowerCase();
+      query = query.where('searchableName', '>=', searchTerm).where('searchableName', '<=', searchTerm + '\uf8ff');
     }
 
-    query += ` ORDER BY u.created_at DESC LIMIT ? OFFSET ?`;
-    params.push(limit, offset);
+    // Paginación con cursor (simplificada)
+    const snapshot = await query.limit(limit * page).get();
+    const users = [];
+    snapshot.forEach(doc => {
+      users.push({ id: doc.id, ...doc.data() });
+    });
 
-    console.log('👥 Query:', query);
-    console.log('👥 Params:', params);
+    // Tomar solo la página actual
+    const startIndex = (page - 1) * limit;
+    const paginatedUsers = users.slice(startIndex, startIndex + limit);
 
-    const [users] = await connection.execute(query, params);
-    console.log('👥 Users found:', users.length);
-
-    // Contar total para paginación
-    let countQuery = `SELECT COUNT(*) as total FROM users`;
-    const countParams = [];
-
-    if (req.query.q) {
-      countQuery += ` WHERE (username LIKE ? OR email LIKE ? OR full_name LIKE ?)`;
-      const searchTerm = `%${req.query.q}%`;
-      countParams.push(searchTerm, searchTerm, searchTerm);
-    }
-
-    const [countResult] = await connection.execute(countQuery, countParams);
-    const total = countResult[0].total;
+    const total = users.length; // Aproximado, Firestore no da count fácil
     const pages = Math.ceil(total / limit);
 
-    await connection.end();
-
     // Formatear respuesta
-    const formattedUsers = users.map(user => ({
+    const formattedUsers = paginatedUsers.map(user => ({
       id: user.id,
-      username: user.username,
-      names: user.full_name || user.username,
+      username: user.username || user.email,
+      names: user.full_name || user.username || user.email,
       email: user.email,
       phone: user.phone || null,
-      address: null, // No existe en la tabla users
-      dni: null, // No existe en la tabla users
-      identification_type: null, // No existe en la tabla users
-      price_per_lb: null, // No existe en la tabla users
-      role: user.role || (user.is_admin === 1 ? 'admin' : 'customer'),
-      is_admin: user.is_admin === 1,
-      groups: [], // Simplificado
-      active: user.active === 1,
-      image_url: null, // No existe en la tabla users
-      last_login: user.last_login,
-      created_at: user.created_at,
-      updated_at: null // No existe en la tabla users
+      address: user.address || null,
+      dni: user.dni || null,
+      identification_type: user.identification_type || null,
+      price_per_lb: user.price_per_lb || null,
+      role: user.role || (user.is_admin ? 'admin' : 'customer'),
+      is_admin: user.is_admin || false,
+      groups: user.groups || [],
+      active: user.active !== false,
+      image_url: user.image_url || null,
+      last_login: user.last_login || null,
+      created_at: user.created_at || null,
+      updated_at: user.updated_at || null
     }));
 
     res.setHeader('Access-Control-Allow-Origin', '*');

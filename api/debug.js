@@ -1,5 +1,5 @@
 // Función de diagnóstico completo para Vercel
-const mysql = require('mysql2/promise');
+const { db } = require('./firebase');
 
 module.exports = async function handler(req, res) {
   // Configurar CORS
@@ -21,64 +21,31 @@ module.exports = async function handler(req, res) {
       environment: {
         NODE_ENV: process.env.NODE_ENV,
         VERCEL_ENV: process.env.VERCEL_ENV,
-        DB_HOST: process.env.DB_HOST ? '✓ Configurado' : '❌ Faltante',
-        DB_USER: process.env.DB_USER ? '✓ Configurado' : '❌ Faltante',
-        DB_PASSWORD: process.env.DB_PASSWORD ? '✓ Configurado' : '❌ Faltante',
-        DB_NAME: process.env.DB_NAME ? '✓ Configurado' : '❌ Faltante',
+        FIREBASE_SERVICE_ACCOUNT_KEY: process.env.FIREBASE_SERVICE_ACCOUNT_KEY ? '✓ Configurado' : '❌ Faltante',
       },
       database: null,
       error: null
     };
 
-    // Intentar conexión a base de datos
+    // Intentar conexión a Firestore
     try {
-      if (process.env.DB_HOST && process.env.DB_USER && process.env.DB_PASSWORD && process.env.DB_NAME) {
-        const pool = mysql.createPool({
-          host: process.env.DB_HOST,
-          port: process.env.DB_PORT || 3306,
-          user: process.env.DB_USER,
-          password: process.env.DB_PASSWORD,
-          database: process.env.DB_NAME,
-          connectionLimit: 1,
-          charset: 'utf8mb4_unicode_ci',
-          acquireTimeout: 10000,
-          timeout: 10000,
-          ssl: false
-        });
+      if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+        const collections = await db.listCollections();
+        diagnostics.database = {
+          status: '✓ Conectado',
+          collections: collections.map(col => col.id),
+          testQuery: 'successful'
+        };
 
-        const conn = await pool.getConnection();
-        
-        try {
-          // Test query simple
-          const [result] = await conn.execute('SELECT 1 as test');
-          diagnostics.database = {
-            status: '✓ Conectado',
-            testQuery: result
-          };
-          
-          // Verificar tabla users
-          const [tables] = await conn.execute("SHOW TABLES LIKE 'users'");
-          diagnostics.database.usersTable = tables.length > 0 ? '✓ Existe' : '❌ No existe';
-          
-          if (tables.length > 0) {
-            const [userCount] = await conn.execute('SELECT COUNT(*) as count FROM users');
-            diagnostics.database.userCount = userCount[0].count;
-          }
-          
-        } finally {
-          conn.release();
-          await pool.end();
-        }
+        // Verificar colección users
+        const usersSnapshot = await db.collection('users').limit(1).get();
+        diagnostics.database.usersCollection = usersSnapshot.size > 0 ? '✓ Tiene documentos' : '⚠ Vacía';
+
       } else {
         diagnostics.database = {
           status: '❌ Variables de entorno faltantes',
-          missing: []
+          missing: ['FIREBASE_SERVICE_ACCOUNT_KEY']
         };
-        
-        if (!process.env.DB_HOST) diagnostics.database.missing.push('DB_HOST');
-        if (!process.env.DB_USER) diagnostics.database.missing.push('DB_USER');
-        if (!process.env.DB_PASSWORD) diagnostics.database.missing.push('DB_PASSWORD');
-        if (!process.env.DB_NAME) diagnostics.database.missing.push('DB_NAME');
       }
     } catch (dbError) {
       diagnostics.database = {
