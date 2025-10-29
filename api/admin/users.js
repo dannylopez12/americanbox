@@ -8,6 +8,13 @@ export default async function handler(req, res) {
   console.log('👥 Getting admin users');
 
   try {
+    console.log('👥 DB Config:', {
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      database: process.env.DB_NAME,
+      port: process.env.DB_PORT || 3306,
+    });
+
     // Conectar a la base de datos
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
@@ -16,6 +23,8 @@ export default async function handler(req, res) {
       database: process.env.DB_NAME,
       port: process.env.DB_PORT || 3306,
     });
+
+    console.log('👥 DB connection established');
 
     // Obtener usuarios con paginación
     const page = parseInt(req.query.page) || 1;
@@ -31,33 +40,34 @@ export default async function handler(req, res) {
         u.is_admin,
         u.created_at,
         u.last_login,
-        u.active,
-        COUNT(o.id) as total_orders
+        u.active
       FROM users u
-      LEFT JOIN orders o ON u.id = o.customer_id AND o.deleted_at IS NULL
-      WHERE u.deleted_at IS NULL
     `;
 
     const params = [];
 
     // Filtro de búsqueda
     if (req.query.q) {
-      query += ` AND (u.username LIKE ? OR u.email LIKE ? OR u.names LIKE ?)`;
+      query += ` WHERE (u.username LIKE ? OR u.email LIKE ? OR u.names LIKE ?)`;
       const searchTerm = `%${req.query.q}%`;
       params.push(searchTerm, searchTerm, searchTerm);
     }
 
-    query += ` GROUP BY u.id ORDER BY u.created_at DESC LIMIT ? OFFSET ?`;
+    query += ` ORDER BY u.created_at DESC LIMIT ? OFFSET ?`;
     params.push(limit, offset);
 
+    console.log('👥 Query:', query);
+    console.log('👥 Params:', params);
+
     const [users] = await connection.execute(query, params);
+    console.log('👥 Users found:', users.length);
 
     // Contar total para paginación
-    let countQuery = `SELECT COUNT(*) as total FROM users WHERE deleted_at IS NULL`;
+    let countQuery = `SELECT COUNT(*) as total FROM users`;
     const countParams = [];
 
     if (req.query.q) {
-      countQuery += ` AND (username LIKE ? OR email LIKE ? OR names LIKE ?)`;
+      countQuery += ` WHERE (username LIKE ? OR email LIKE ? OR names LIKE ?)`;
       const searchTerm = `%${req.query.q}%`;
       countParams.push(searchTerm, searchTerm, searchTerm);
     }
@@ -79,14 +89,14 @@ export default async function handler(req, res) {
       created_at: user.created_at,
       last_login: user.last_login,
       active: user.active === 1,
-      total_orders: user.total_orders
+      total_orders: 0 // Simplificado por ahora
     }));
 
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    console.log(`👥 Found ${formattedUsers.length} users (page ${page}/${pages})`);
+    console.log(`👥 Returning ${formattedUsers.length} users (page ${page}/${pages})`);
     return res.status(200).json({
       ok: true,
       items: formattedUsers,
@@ -99,6 +109,10 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('👥 Admin users error:', error);
     res.setHeader('Access-Control-Allow-Origin', '*');
-    return res.status(500).json({ error: 'Internal server error', ok: false });
+    return res.status(500).json({
+      error: 'Internal server error',
+      details: error.message,
+      ok: false
+    });
   }
 }

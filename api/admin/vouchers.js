@@ -8,6 +8,13 @@ export default async function handler(req, res) {
   console.log('🎫 Getting admin vouchers');
 
   try {
+    console.log('🎫 DB Config:', {
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      database: process.env.DB_NAME,
+      port: process.env.DB_PORT || 3306,
+    });
+
     // Conectar a la base de datos
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
@@ -16,6 +23,8 @@ export default async function handler(req, res) {
       database: process.env.DB_NAME,
       port: process.env.DB_PORT || 3306,
     });
+
+    console.log('🎫 DB connection established');
 
     // Obtener vouchers con paginación
     const page = parseInt(req.query.page) || 1;
@@ -38,14 +47,13 @@ export default async function handler(req, res) {
         v.active,
         v.description
       FROM vouchers v
-      WHERE v.deleted_at IS NULL
     `;
 
     const params = [];
 
     // Filtro de búsqueda
     if (req.query.q) {
-      query += ` AND (v.code LIKE ? OR v.description LIKE ?)`;
+      query += ` WHERE (v.code LIKE ? OR v.description LIKE ?)`;
       const searchTerm = `%${req.query.q}%`;
       params.push(searchTerm, searchTerm);
     }
@@ -53,14 +61,18 @@ export default async function handler(req, res) {
     query += ` ORDER BY v.created_at DESC LIMIT ? OFFSET ?`;
     params.push(limit, offset);
 
+    console.log('🎫 Query:', query);
+    console.log('🎫 Params:', params);
+
     const [vouchers] = await connection.execute(query, params);
+    console.log('🎫 Vouchers found:', vouchers.length);
 
     // Contar total para paginación
-    let countQuery = `SELECT COUNT(*) as total FROM vouchers WHERE deleted_at IS NULL`;
+    let countQuery = `SELECT COUNT(*) as total FROM vouchers`;
     const countParams = [];
 
     if (req.query.q) {
-      countQuery += ` AND (code LIKE ? OR description LIKE ?)`;
+      countQuery += ` WHERE (code LIKE ? OR description LIKE ?)`;
       const searchTerm = `%${req.query.q}%`;
       countParams.push(searchTerm, searchTerm);
     }
@@ -94,7 +106,7 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    console.log(`🎫 Found ${formattedVouchers.length} vouchers (page ${page}/${pages})`);
+    console.log(`🎫 Returning ${formattedVouchers.length} vouchers (page ${page}/${pages})`);
     return res.status(200).json({
       ok: true,
       items: formattedVouchers,
@@ -107,6 +119,10 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('🎫 Admin vouchers error:', error);
     res.setHeader('Access-Control-Allow-Origin', '*');
-    return res.status(500).json({ error: 'Internal server error', ok: false });
+    return res.status(500).json({
+      error: 'Internal server error',
+      details: error.message,
+      ok: false
+    });
   }
 }

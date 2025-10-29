@@ -8,6 +8,13 @@ export default async function handler(req, res) {
   console.log('📊 Getting admin stats');
 
   try {
+    console.log('📊 DB Config:', {
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      database: process.env.DB_NAME,
+      port: process.env.DB_PORT || 3306,
+    });
+
     // Conectar a la base de datos
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
@@ -17,36 +24,96 @@ export default async function handler(req, res) {
       port: process.env.DB_PORT || 3306,
     });
 
-    // Obtener estadísticas básicas
-    const [customersResult] = await connection.execute(
-      'SELECT COUNT(*) as count FROM customers WHERE deleted_at IS NULL'
-    );
+    console.log('📊 DB connection established');
 
-    const [productsResult] = await connection.execute(
-      'SELECT COUNT(*) as count FROM products WHERE deleted_at IS NULL'
-    );
+    // Verificar que las tablas existen
+    const [tables] = await connection.execute("SHOW TABLES");
+    console.log('📊 Available tables:', tables.map(t => Object.values(t)[0]));
 
-    const [addressesResult] = await connection.execute(
-      'SELECT COUNT(*) as count FROM addresses WHERE deleted_at IS NULL'
-    );
+    // Obtener estadísticas básicas con consultas más seguras
+    let customersCount = 0;
+    let productsCount = 0;
+    let addressesCount = 0;
+    let categoriesCount = 0;
 
-    const [categoriesResult] = await connection.execute(
-      'SELECT COUNT(*) as count FROM categories WHERE deleted_at IS NULL'
-    );
+    try {
+      const [customersResult] = await connection.execute('SELECT COUNT(*) as count FROM customers');
+      customersCount = customersResult[0].count || 0;
+      console.log('📊 Customers count:', customersCount);
+    } catch (e) {
+      console.log('📊 Customers table error:', e.message);
+    }
+
+    try {
+      const [productsResult] = await connection.execute('SELECT COUNT(*) as count FROM products');
+      productsCount = productsResult[0].count || 0;
+      console.log('📊 Products count:', productsCount);
+    } catch (e) {
+      console.log('📊 Products table error:', e.message);
+    }
+
+    try {
+      const [addressesResult] = await connection.execute('SELECT COUNT(*) as count FROM addresses');
+      addressesCount = addressesResult[0].count || 0;
+      console.log('📊 Addresses count:', addressesCount);
+    } catch (e) {
+      console.log('📊 Addresses table error:', e.message);
+    }
+
+    try {
+      const [categoriesResult] = await connection.execute('SELECT COUNT(*) as count FROM categories');
+      categoriesCount = categoriesResult[0].count || 0;
+      console.log('📊 Categories count:', categoriesCount);
+    } catch (e) {
+      console.log('📊 Categories table error:', e.message);
+    }
 
     // Estadísticas de órdenes por estado
-    const [orderStatsResult] = await connection.execute(`
-      SELECT
-        SUM(CASE WHEN status = 'prealerta' THEN 1 ELSE 0 END) as prealerta,
-        SUM(CASE WHEN status = 'captado' THEN 1 ELSE 0 END) as captado,
-        SUM(CASE WHEN status = 'viajando' THEN 1 ELSE 0 END) as viajando,
-        SUM(CASE WHEN status = 'aduana' THEN 1 ELSE 0 END) as aduana,
-        SUM(CASE WHEN status = 'entregado' THEN 1 ELSE 0 END) as entregado
-      FROM orders
-      WHERE deleted_at IS NULL
-    `);
+    let orderStats = {};
+    try {
+      const [orderStatsResult] = await connection.execute(`
+        SELECT
+          status,
+          COUNT(*) as count
+        FROM orders
+        GROUP BY status
+      `);
+      orderStats = orderStatsResult.reduce((acc, row) => {
+        acc[row.status] = row.count;
+        return acc;
+      }, {});
+      console.log('📊 Order stats:', orderStats);
+    } catch (e) {
+      console.log('📊 Orders table error:', e.message);
+    }
 
     await connection.end();
+
+    const stats = {
+      customers: customersCount,
+      products: productsCount,
+      addresses: addressesCount,
+      categories: categoriesCount,
+      orderStats: orderStats
+    };
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    console.log('📊 Final stats:', stats);
+    return res.status(200).json({ ok: true, ...stats });
+
+  } catch (error) {
+    console.error('📊 Admin stats error:', error);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.status(500).json({
+      error: 'Internal server error',
+      details: error.message,
+      ok: false
+    });
+  }
+}
 
     const stats = {
       customers: customersResult[0].count || 0,

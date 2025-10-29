@@ -8,6 +8,13 @@ export default async function handler(req, res) {
   console.log('💰 Getting monthly revenue');
 
   try {
+    console.log('💰 DB Config:', {
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      database: process.env.DB_NAME,
+      port: process.env.DB_PORT || 3306,
+    });
+
     // Conectar a la base de datos
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
@@ -16,6 +23,8 @@ export default async function handler(req, res) {
       database: process.env.DB_NAME,
       port: process.env.DB_PORT || 3306,
     });
+
+    console.log('💰 DB connection established');
 
     // Obtener ingresos mensuales de los últimos 12 meses
     const [revenueData] = await connection.execute(`
@@ -26,13 +35,13 @@ export default async function handler(req, res) {
         SUM(total_amount) as revenue,
         COUNT(*) as orders_count
       FROM orders
-      WHERE deleted_at IS NULL
-        AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-        AND status NOT IN ('cancelled', 'refunded')
+      WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
       GROUP BY DATE_FORMAT(created_at, '%Y-%m'), YEAR(created_at), MONTH(created_at)
       ORDER BY year DESC, month_num DESC
       LIMIT 12
     `);
+
+    console.log('💰 Revenue data found:', revenueData.length);
 
     await connection.end();
 
@@ -49,7 +58,7 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    console.log(`💰 Found revenue data for ${monthlyRevenue.length} months`);
+    console.log(`💰 Returning revenue data for ${monthlyRevenue.length} months`);
     return res.status(200).json({
       ok: true,
       data: monthlyRevenue
@@ -58,6 +67,10 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('💰 Monthly revenue error:', error);
     res.setHeader('Access-Control-Allow-Origin', '*');
-    return res.status(500).json({ error: 'Internal server error', ok: false });
+    return res.status(500).json({
+      error: 'Internal server error',
+      details: error.message,
+      ok: false
+    });
   }
 }

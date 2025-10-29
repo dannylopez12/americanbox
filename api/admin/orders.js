@@ -8,6 +8,13 @@ export default async function handler(req, res) {
   console.log('📦 Getting admin orders');
 
   try {
+    console.log('📦 DB Config:', {
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      database: process.env.DB_NAME,
+      port: process.env.DB_PORT || 3306,
+    });
+
     // Conectar a la base de datos
     const connection = await mysql.createConnection({
       host: process.env.DB_HOST,
@@ -17,9 +24,11 @@ export default async function handler(req, res) {
       port: process.env.DB_PORT || 3306,
     });
 
+    console.log('📦 DB connection established');
+
     const limit = parseInt(req.query.limit) || 10;
 
-    // Obtener órdenes recientes con información del cliente
+    // Obtener órdenes recientes con información básica
     const [orders] = await connection.execute(`
       SELECT
         o.id,
@@ -29,18 +38,16 @@ export default async function handler(req, res) {
         o.created_at,
         o.updated_at,
         c.names as customer_name,
-        c.email as customer_email,
         u.username as customer_username,
-        COUNT(oi.id) as items_count
+        u.email as customer_email
       FROM orders o
       LEFT JOIN customers c ON o.customer_id = c.id
       LEFT JOIN users u ON o.customer_id = u.id
-      LEFT JOIN order_items oi ON o.id = oi.order_id AND oi.deleted_at IS NULL
-      WHERE o.deleted_at IS NULL
-      GROUP BY o.id, o.tracking_number, o.status, o.total_amount, o.created_at, o.updated_at, c.names, c.email, u.username
       ORDER BY o.created_at DESC
       LIMIT ?
     `, [limit]);
+
+    console.log('📦 Orders found:', orders.length);
 
     await connection.end();
 
@@ -54,14 +61,14 @@ export default async function handler(req, res) {
       updated_at: order.updated_at,
       customer_name: order.customer_name || order.customer_username || 'N/A',
       customer_email: order.customer_email,
-      items_count: order.items_count
+      items_count: 0 // Simplificado por ahora
     }));
 
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    console.log(`📦 Found ${formattedOrders.length} recent orders`);
+    console.log(`📦 Returning ${formattedOrders.length} recent orders`);
     return res.status(200).json({
       ok: true,
       orders: formattedOrders
@@ -70,6 +77,10 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('📦 Admin orders error:', error);
     res.setHeader('Access-Control-Allow-Origin', '*');
-    return res.status(500).json({ error: 'Internal server error', ok: false });
+    return res.status(500).json({
+      error: 'Internal server error',
+      details: error.message,
+      ok: false
+    });
   }
 }
