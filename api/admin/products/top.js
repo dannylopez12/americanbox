@@ -66,7 +66,8 @@ export default async function handler(req, res) {
     console.log(`📈 Returning ${formattedProducts.length} top products`);
     return res.status(200).json({
       ok: true,
-      products: formattedProducts
+      labels: formattedProducts.map(product => product.name),
+      values: formattedProducts.map(product => product.total_sold)
     });
 
   } catch (error) {

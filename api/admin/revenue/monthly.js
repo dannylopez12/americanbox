@@ -61,7 +61,8 @@ export default async function handler(req, res) {
     console.log(`💰 Returning revenue data for ${monthlyRevenue.length} months`);
     return res.status(200).json({
       ok: true,
-      data: monthlyRevenue
+      labels: monthlyRevenue.map(item => item.month),
+      values: monthlyRevenue.map(item => item.revenue)
     });
 
   } catch (error) {

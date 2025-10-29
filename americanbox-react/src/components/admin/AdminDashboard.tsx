@@ -133,8 +133,12 @@ export default function AdminDashboard() {
         const o = await api<{ ok: boolean; orders: OrderRow[] }>("/api/admin/orders?limit=10");
 
         if (!alive) return;
-        if (s?.ok) setStats({ customers: s.customers, products: s.products, addresses: s.addresses, categories: s.categories, orderStats: s.orderStats });
-        if (o?.ok) setOrders(o.orders);
+        if (s?.ok && typeof s.customers === 'number' && typeof s.products === 'number') {
+          setStats({ customers: s.customers, products: s.products, addresses: s.addresses, categories: s.categories, orderStats: s.orderStats });
+        }
+        if (o?.ok && Array.isArray(o.orders)) {
+          setOrders(o.orders);
+        }
       } catch (e) {
         console.error(e);
       }
@@ -151,11 +155,11 @@ export default function AdminDashboard() {
         const p = await api<TopProductsResp>("/api/admin/products/top");
         if (!alive) return;
 
-        if (r?.ok) {
+        if (r?.ok && r.labels && r.values) {
           setRevLabels(r.labels);
           setRevValues(r.values.map(v => num(v)));
         }
-        if (p?.ok) {
+        if (p?.ok && p.labels && p.values) {
           setPieLabels(p.labels);
           setPieValues(p.values.map(v => num(v)));
         }
@@ -168,6 +172,7 @@ export default function AdminDashboard() {
 
   /* Búsqueda en cliente */
   const filtered = useMemo(() => {
+    if (!Array.isArray(orders)) return [];
     const term = q.trim().toLowerCase();
     if (!term) return orders;
     return orders.filter(o =>
@@ -180,11 +185,11 @@ export default function AdminDashboard() {
 
   /* Adaptadores recharts */
   const pieData = useMemo(
-    () => pieLabels.map((name, i) => ({ name, value: pieValues[i] ?? 0 })),
+    () => Array.isArray(pieLabels) && Array.isArray(pieValues) ? pieLabels.map((name, i) => ({ name, value: pieValues[i] ?? 0 })) : [],
     [pieLabels, pieValues]
   );
   const barData = useMemo(
-    () => revLabels.map((ym, i) => ({ mes: ymToMes(ym), valor: revValues[i] ?? 0 })),
+    () => Array.isArray(revLabels) && Array.isArray(revValues) ? revLabels.map((ym, i) => ({ mes: ymToMes(ym), valor: revValues[i] ?? 0 })) : [],
     [revLabels, revValues]
   );
 
