@@ -47,6 +47,19 @@ export default function LoginDifferent() {
     // Backend ya devuelve redirect correcto
     if (res.redirect) {
       console.log("Redirecting to:", res.redirect);
+
+      // Guardar información de sesión en localStorage
+      const sessionData = {
+        ok: true,
+        logged: true,
+        role: res.user?.role || (res.user?.is_admin ? 'admin' : 'customer'),
+        uid: res.user?.id,
+        customer_id: res.user?.customer_id || null,
+        username: res.user?.username
+      };
+      localStorage.setItem('americanbox_session', JSON.stringify(sessionData));
+      console.log('💾 Session saved to localStorage:', sessionData);
+
       window.location.href = res.redirect;
       return;
     }

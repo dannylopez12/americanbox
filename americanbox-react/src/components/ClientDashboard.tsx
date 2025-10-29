@@ -19,6 +19,7 @@ import {
   Save,
 } from "lucide-react";
 import { api } from "../lib/api";
+import { logout } from "../lib/auth";
 
 type MeResponse = {
   logged: boolean;
@@ -295,10 +296,7 @@ export default function ClientDashboard() {
               <span>{me.username}</span>
             </div>
             <button
-              onClick={async () => {
-                await api("/api/logout", { method: "POST" });
-                window.location.href = "/#login";
-              }}
+              onClick={logout}
               className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 hover:bg-white/20 transition"
             >
               <LogOut className="w-4 h-4" />

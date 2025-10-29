@@ -26,6 +26,14 @@ function createPool() {
   });
 }
 
+// Función auxiliar para verificar sesión (simplificada para Vercel)
+async function checkSession() {
+  // En Vercel serverless, no tenemos sesiones persistentes como en Express
+  // Por ahora, devolveremos que no hay sesión (esto es temporal)
+  // TODO: Implementar un sistema de tokens JWT o similar
+  return { logged: false, role: null, uid: null };
+}
+
 module.exports = async function handler(req, res) {
   console.log('🔐 Login request received:', req.method, req.url);
 

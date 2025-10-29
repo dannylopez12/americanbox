@@ -7,6 +7,7 @@ import {
   ChevronDown, ChevronRight, Store, Boxes, AlertTriangle, KeyRound, UserCog, MapPinned
 } from "lucide-react";
 import { api } from "../../lib/api";
+import { logout } from "../../lib/auth";
 import { useSession } from "../../hooks/useSession";
 import AdminCategories from "./AdminCategories";
 import AdminCompany from "./AdminCompany";
@@ -478,10 +479,7 @@ export default function AdminDashboard() {
 
         <div className="px-3 py-3 border-t border-white/10">
           <button
-            onClick={async () => {
-              await api("/api/logout", { method: "POST" });
-              window.location.href = "/#login";
-            }}
+            onClick={logout}
             className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-white/10 hover:bg-white/20 px-3 py-2"
           >
             <LogOut className="w-4 h-4" />
