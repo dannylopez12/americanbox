@@ -37,15 +37,10 @@ export default async function handler(req, res) {
         v.code,
         v.discount_type,
         v.discount_value,
-        v.min_order_amount,
-        v.max_discount,
         v.usage_limit,
         v.used_count,
-        v.starts_at,
-        v.expires_at,
         v.created_at,
-        v.active,
-        v.description
+        v.active
       FROM vouchers v
     `;
 
@@ -53,9 +48,9 @@ export default async function handler(req, res) {
 
     // Filtro de búsqueda
     if (req.query.q) {
-      query += ` WHERE (v.code LIKE ? OR v.description LIKE ?)`;
+      query += ` WHERE (v.code LIKE ?)`;
       const searchTerm = `%${req.query.q}%`;
-      params.push(searchTerm, searchTerm);
+      params.push(searchTerm);
     }
 
     query += ` ORDER BY v.created_at DESC LIMIT ? OFFSET ?`;
@@ -72,9 +67,9 @@ export default async function handler(req, res) {
     const countParams = [];
 
     if (req.query.q) {
-      countQuery += ` WHERE (code LIKE ? OR description LIKE ?)`;
+      countQuery += ` WHERE (code LIKE ?)`;
       const searchTerm = `%${req.query.q}%`;
-      countParams.push(searchTerm, searchTerm);
+      countParams.push(searchTerm);
     }
 
     const [countResult] = await connection.execute(countQuery, countParams);
@@ -87,18 +82,18 @@ export default async function handler(req, res) {
     const formattedVouchers = vouchers.map(voucher => ({
       id: voucher.id,
       code: voucher.code,
-      discount_type: voucher.discount_type,
-      discount_value: parseFloat(voucher.discount_value),
-      min_order_amount: voucher.min_order_amount ? parseFloat(voucher.min_order_amount) : null,
-      max_discount: voucher.max_discount ? parseFloat(voucher.max_discount) : null,
-      usage_limit: voucher.usage_limit,
+      discount_type: voucher.discount_type || 'percentage',
+      discount_value: parseFloat(voucher.discount_value) || 0,
+      min_order_amount: null,
+      max_discount: null,
+      usage_limit: voucher.usage_limit || null,
       used_count: voucher.used_count || 0,
-      starts_at: voucher.starts_at,
-      expires_at: voucher.expires_at,
+      starts_at: null,
+      expires_at: null,
       created_at: voucher.created_at,
       active: voucher.active === 1,
-      description: voucher.description,
-      is_expired: voucher.expires_at ? new Date(voucher.expires_at) < new Date() : false,
+      description: voucher.code || 'Voucher',
+      is_expired: false,
       is_used_up: voucher.usage_limit ? voucher.used_count >= voucher.usage_limit : false
     }));
 

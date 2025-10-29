@@ -38,8 +38,7 @@ export default async function handler(req, res) {
         o.created_at,
         o.updated_at,
         c.names as customer_name,
-        u.username as customer_username,
-        u.email as customer_email
+        u.username as customer_username
       FROM orders o
       LEFT JOIN customers c ON o.customer_id = c.id
       LEFT JOIN users u ON o.customer_id = u.id
@@ -60,7 +59,7 @@ export default async function handler(req, res) {
       created_at: order.created_at,
       updated_at: order.updated_at,
       customer_name: order.customer_name || order.customer_username || 'N/A',
-      customer_email: order.customer_email,
+      customer_email: null, // No existe en la consulta
       items_count: 0 // Simplificado por ahora
     }));
 

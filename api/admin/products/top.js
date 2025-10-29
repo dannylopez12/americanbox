@@ -32,15 +32,12 @@ export default async function handler(req, res) {
         p.id,
         p.name,
         p.price,
-        p.image_url,
-        c.name as category_name,
         COUNT(oi.id) as total_sold,
         SUM(oi.price * oi.quantity) as total_revenue
       FROM products p
-      LEFT JOIN categories c ON p.category_id = c.id
       LEFT JOIN order_items oi ON p.id = oi.product_id
       LEFT JOIN orders o ON oi.order_id = o.id
-      GROUP BY p.id, p.name, p.price, p.image_url, c.name
+      GROUP BY p.id, p.name, p.price
       HAVING total_sold > 0
       ORDER BY total_sold DESC
       LIMIT 10
@@ -55,8 +52,8 @@ export default async function handler(req, res) {
       id: product.id,
       name: product.name,
       price: parseFloat(product.price),
-      image_url: product.image_url,
-      category_name: product.category_name,
+      image_url: null, // No existe en la consulta
+      category_name: null, // No existe en la consulta
       total_sold: product.total_sold,
       total_revenue: parseFloat(product.total_revenue || 0),
       orders_count: product.total_sold // Simplificado

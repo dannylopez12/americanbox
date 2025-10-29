@@ -35,7 +35,6 @@ export default async function handler(req, res) {
       SELECT
         u.id,
         u.username,
-        u.email,
         u.names,
         u.is_admin,
         u.created_at,
@@ -46,11 +45,11 @@ export default async function handler(req, res) {
 
     const params = [];
 
-    // Filtro de búsqueda
+    // Filtro de búsqueda - solo buscar en campos que sabemos que existen
     if (req.query.q) {
-      query += ` WHERE (u.username LIKE ? OR u.email LIKE ? OR u.names LIKE ?)`;
+      query += ` WHERE (u.username LIKE ? OR u.names LIKE ?)`;
       const searchTerm = `%${req.query.q}%`;
-      params.push(searchTerm, searchTerm, searchTerm);
+      params.push(searchTerm, searchTerm);
     }
 
     query += ` ORDER BY u.created_at DESC LIMIT ? OFFSET ?`;
@@ -67,9 +66,9 @@ export default async function handler(req, res) {
     const countParams = [];
 
     if (req.query.q) {
-      countQuery += ` WHERE (username LIKE ? OR email LIKE ? OR names LIKE ?)`;
+      countQuery += ` WHERE (username LIKE ? OR names LIKE ?)`;
       const searchTerm = `%${req.query.q}%`;
-      countParams.push(searchTerm, searchTerm, searchTerm);
+      countParams.push(searchTerm, searchTerm);
     }
 
     const [countResult] = await connection.execute(countQuery, countParams);
@@ -82,7 +81,6 @@ export default async function handler(req, res) {
     const formattedUsers = users.map(user => ({
       id: user.id,
       username: user.username,
-      email: user.email,
       names: user.names,
       is_admin: user.is_admin === 1,
       role: user.is_admin === 1 ? 'admin' : 'customer',
