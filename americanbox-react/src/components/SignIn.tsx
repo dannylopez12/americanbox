@@ -1,7 +1,9 @@
 // src/components/SignIn.tsx
 import { useRef, useState } from "react";
 import { User, Mail, Phone, IdCard, Calendar, MapPin, Lock } from "lucide-react";
-import { api } from "../lib/api";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, fdb } from "../lib/firebaseClient";
 
 // Opciones visibles y valor enviado al backend
 const TIPO_ID_OPCIONES = [
@@ -73,20 +75,40 @@ export default function SignIn() {
       role: "customer",
     };
 
-    const res = await api<{ ok: boolean; message?: string; error?: string; redirect?: string }>(
-      "/api/register",
-      { method: "POST", json: payload }
-    );
+    try {
+      // Crear usuario en Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
+      const user = userCredential.user;
 
-    setLoading(false);
+      // Guardar datos adicionales en Firestore
+      const tipoIdent = mapCodigoToTexto(form.tipoId) as
+        | "CEDULA" | "RUC" | "PASAPORTE" | "VENTA A CONSUMIDOR FINAL" | "IDENTIFICACION DEL EXTERIOR" | null;
 
-    if (!res || !(res as any).ok) {
-      setErr(((res as any)?.error) || "Error registrando");
-      return;
+      const userData = {
+        names: form.nombres,
+        email: form.email,
+        username: form.username || form.email.split("@")[0],
+        dni: form.documento || null,
+        mobile: form.celular || null,
+        phone: form.convencional || null,
+        address: form.direccion || null,
+        birthdate: form.nacimiento || null,
+        gender: form.genero === "Masculino" ? "male" : "female",
+        identification_type: tipoIdent,
+        send_email_invoice: form.facturaEmail ? 1 : 0,
+        role: "customer",
+        created_at: new Date(),
+      };
+
+      await setDoc(doc(fdb, 'users', user.uid), userData);
+
+      setMsg("Registro exitoso");
+      window.location.href = "/login/different";
+    } catch (error: any) {
+      setErr(error.message || "Error registrando");
+    } finally {
+      setLoading(false);
     }
-
-    setMsg(res.message || "Registro OK");
-    window.location.href = "/login/different";
   };
 
   return (

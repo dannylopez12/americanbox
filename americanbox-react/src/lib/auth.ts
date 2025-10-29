@@ -1,9 +1,10 @@
-import { api } from "../lib/api";
+import { signOut } from "firebase/auth";
+import { auth } from "./firebaseClient";
 
 export async function logout() {
   try {
-    // Limpiar sesión del backend
-    await api("/api/auth/logout", { method: "POST" });
+    // Cerrar sesión en Firebase
+    await signOut(auth);
   } catch (e) {
     console.error("Error during logout:", e);
   } finally {

@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
-import { api } from "../lib/api";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { auth, fdb } from "../lib/firebaseClient";
+import { doc, getDoc } from "firebase/firestore";
 
 export type MeResponse = {
   ok?: boolean;
   logged: boolean;
   role?: "admin" | "customer" | string;
-  uid?: number;
-  customer_id?: number | null;
+  uid?: string;
+  customer_id?: string | null;
   username?: string | null;
+  email?: string | null;
   error?: string;
 };
 
@@ -16,42 +19,42 @@ export function useSession() {
   const [me, setMe] = useState<MeResponse | null>(null);
 
   useEffect(() => {
-    // Primero verificar localStorage para estado de login persistente
-    const storedSession = localStorage.getItem('americanbox_session');
-    if (storedSession) {
-      try {
-        const sessionData = JSON.parse(storedSession);
-        console.log('📱 Session found in localStorage:', sessionData);
-        setMe(sessionData);
-        setLoading(false);
-        return;
-      } catch (e) {
-        console.error('Error parsing stored session:', e);
-        localStorage.removeItem('americanbox_session');
-      }
-    }
+    // Usar Firebase Auth para verificar sesión
+    const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
+      if (user) {
+        console.log('� User authenticated:', user.uid);
 
-    // Si no hay sesión en localStorage, verificar con el backend
-    (async () => {
-      try {
-        console.log('🔍 Checking session with backend...');
-        const res = await api<MeResponse>("/api/auth/me");
-        console.log('🔍 Backend response:', res);
+        // Obtener datos adicionales de Firestore
+        try {
+          const userDoc = await getDoc(doc(fdb, 'users', user.uid));
+          const userData = userDoc.exists() ? userDoc.data() : {};
 
-        if (res && res.logged) {
+          const sessionData: MeResponse = {
+            ok: true,
+            logged: true,
+            uid: user.uid,
+            email: user.email || undefined,
+            username: user.email || userData.username,
+            role: userData.role || 'customer',
+            customer_id: userData.customer_id || null,
+          };
+
           // Guardar en localStorage para persistencia
-          localStorage.setItem('americanbox_session', JSON.stringify(res));
-          setMe(res);
-        } else {
-          setMe({ ok: false, logged: false });
+          localStorage.setItem('americanbox_session', JSON.stringify(sessionData));
+          setMe(sessionData);
+        } catch (error) {
+          console.error('Error getting user data:', error);
+          setMe({ ok: false, logged: false, error: 'Error loading user data' });
         }
-      } catch (e) {
-        console.error("Error al obtener sesión:", e);
+      } else {
+        console.log('🔍 No user authenticated');
+        localStorage.removeItem('americanbox_session');
         setMe({ ok: false, logged: false });
-      } finally {
-        setLoading(false);
       }
-    })();
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   return { loading, me };

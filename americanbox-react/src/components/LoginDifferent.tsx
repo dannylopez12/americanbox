@@ -1,7 +1,8 @@
 // src/components/LoginDifferent.tsx
 import { useState } from "react";
 import { Eye, EyeOff, Lock, LogIn } from "lucide-react";
-import { api } from "../lib/api";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../lib/firebaseClient";
 
 type LoginResponse = {
   ok: boolean;
@@ -32,21 +33,18 @@ export default function LoginDifferent() {
     setLoading(true);
     setErr(null);
 
-    const res = await api<LoginResponse>("/api/login", {
-      method: "POST",
-      json: { username: user, password: pass, adminMode: isAdminMode },
-    });
-    console.log("Respuesta login:", res);
-    setLoading(false);
-
-    if (!res || res.ok !== true) {
-      setErr(res?.error || "Respuesta no válida");
-      return;
+    try {
+      await signInWithEmailAndPassword(auth, user, pass);
+      // Firebase Auth maneja la sesión automáticamente
+      // El hook useSession detectará el cambio
+      console.log("Login successful");
+      // Redirect se maneja en useSession o en el componente padre
+    } catch (error: any) {
+      setErr(error.message || "Error en login");
+    } finally {
+      setLoading(false);
     }
-
-    // Backend ya devuelve redirect correcto
-    if (res.redirect) {
-      console.log("Redirecting to:", res.redirect);
+  };
 
       // Guardar información de sesión en localStorage
       const sessionData = {
