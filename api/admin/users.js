@@ -1,6 +1,6 @@
 const mysql = require('mysql2/promise');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -84,13 +84,21 @@ export default async function handler(req, res) {
     const formattedUsers = users.map(user => ({
       id: user.id,
       username: user.username,
-      names: user.names,
+      names: user.full_name || user.username,
+      email: user.email,
+      phone: user.phone || null,
+      address: null, // No existe en la tabla users
+      dni: null, // No existe en la tabla users
+      identification_type: null, // No existe en la tabla users
+      price_per_lb: null, // No existe en la tabla users
+      role: user.role || (user.is_admin === 1 ? 'admin' : 'customer'),
       is_admin: user.is_admin === 1,
-      role: user.is_admin === 1 ? 'admin' : 'customer',
-      created_at: user.created_at,
-      last_login: user.last_login,
+      groups: [], // Simplificado
       active: user.active === 1,
-      total_orders: 0 // Simplificado por ahora
+      image_url: null, // No existe en la tabla users
+      last_login: user.last_login,
+      created_at: user.created_at,
+      updated_at: null // No existe en la tabla users
     }));
 
     res.setHeader('Access-Control-Allow-Origin', '*');
