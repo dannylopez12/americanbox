@@ -2,6 +2,14 @@
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 
+console.log('🔧 Login function loaded');
+console.log('Environment variables:', {
+  DB_HOST: process.env.DB_HOST ? 'SET' : 'NOT SET',
+  DB_USER: process.env.DB_USER ? 'SET' : 'NOT SET',
+  DB_PASSWORD: process.env.DB_PASSWORD ? 'SET' : 'NOT SET',
+  DB_NAME: process.env.DB_NAME ? 'SET' : 'NOT SET'
+});
+
 // Pool de conexión MySQL
 function createPool() {
   return mysql.createPool({
@@ -19,16 +27,20 @@ function createPool() {
 }
 
 module.exports = async function handler(req, res) {
+  console.log('🔐 Login request received:', req.method, req.url);
+
   // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
+
   if (req.method === 'OPTIONS') {
+    console.log('✅ CORS preflight request handled');
     return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
+    console.log('❌ Method not allowed:', req.method);
     return res.status(405).json({ ok: false, error: 'Método no permitido' });
   }
 
