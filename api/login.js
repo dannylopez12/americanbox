@@ -1,38 +1,16 @@
 // Endpoint de login para Vercel Serverless Functions
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
+const { auth } = require('./firebase');
 
 console.log('🔧 Login function loaded');
 console.log('Environment variables:', {
   DB_HOST: process.env.DB_HOST ? 'SET' : 'NOT SET',
   DB_USER: process.env.DB_USER ? 'SET' : 'NOT SET',
   DB_PASSWORD: process.env.DB_PASSWORD ? 'SET' : 'NOT SET',
-  DB_NAME: process.env.DB_NAME ? 'SET' : 'NOT SET'
+  DB_NAME: process.env.DB_NAME ? 'SET' : 'NOT SET',
+  FIREBASE_SERVICE_ACCOUNT_KEY: process.env.FIREBASE_SERVICE_ACCOUNT_KEY ? 'SET' : 'NOT SET'
 });
-
-// Pool de conexión MySQL
-function createPool() {
-  return mysql.createPool({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT || 3306,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    connectionLimit: 5,
-    charset: 'utf8mb4_unicode_ci',
-    acquireTimeout: 30000,
-    timeout: 30000,
-    ssl: false
-  });
-}
-
-// Función auxiliar para verificar sesión (simplificada para Vercel)
-async function checkSession() {
-  // En Vercel serverless, no tenemos sesiones persistentes como en Express
-  // Por ahora, devolveremos que no hay sesión (esto es temporal)
-  // TODO: Implementar un sistema de tokens JWT o similar
-  return { logged: false, role: null, uid: null };
-}
 
 module.exports = async function handler(req, res) {
   console.log('🔐 Login request received:', req.method, req.url);
@@ -52,99 +30,63 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ ok: false, error: 'Método no permitido' });
   }
 
-  let pool = null;
-  let conn = null;
-
   try {
     // Verificar variables de entorno
-    if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_NAME) {
-      console.error('❌ Variables de entorno faltantes:', {
-        DB_HOST: !!process.env.DB_HOST,
-        DB_USER: !!process.env.DB_USER,
-        DB_PASSWORD: !!process.env.DB_PASSWORD,
-        DB_NAME: !!process.env.DB_NAME
-      });
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+      console.error('❌ FIREBASE_SERVICE_ACCOUNT_KEY not set');
       return res.status(500).json({ 
         ok: false, 
-        error: 'Configuración de base de datos incompleta - verifica variables de entorno en Vercel' 
+        error: 'Configuración de Firebase incompleta - verifica variables de entorno en Vercel' 
       });
     }
 
-    const { username, password } = req.body;
+    const { idToken } = req.body;
 
-    if (!username || !password) {
-      console.log('❌ Missing credentials');
+    if (!idToken) {
+      console.log('❌ Missing idToken');
       return res.status(400).json({ 
         ok: false, 
-        error: 'Usuario y contraseña requeridos' 
+        error: 'idToken requerido' 
       });
     }
 
-    console.log('🔍 Attempting login for:', username);
+    console.log('🔍 Verifying Firebase token');
 
-    pool = createPool();
-    conn = await pool.getConnection();
-    
+    let decodedToken;
     try {
-      // Buscar usuario
-      const [users] = await conn.execute(
-        'SELECT id, username, password_hash, is_admin, role FROM users WHERE username = ?',
-        [username]
-      );
-
-      if (users.length === 0) {
-        return res.status(401).json({ 
-          ok: false, 
-          error: 'Credenciales inválidas' 
-        });
-      }
-
-      const user = users[0];
-      console.log('👤 User found:', { id: user.id, username: user.username, is_admin: user.is_admin, role: user.role });
-      
-      // Verificar contraseña
-      const validPassword = await bcrypt.compare(password, user.password_hash);
-      console.log('🔐 Password validation result:', validPassword);
-      
-      if (!validPassword) {
-        console.log('❌ Invalid password for user:', username);
-        return res.status(401).json({ 
-          ok: false, 
-          error: 'Credenciales inválidas' 
-        });
-      }
-
-      // Login exitoso - determinar redirect basado en rol
-      const isAdmin = Boolean(user.is_admin) || user.role === 'admin';
-      const redirect = isAdmin ? '/dashboard' : '/client';
-      
-      return res.status(200).json({
-        ok: true,
-        redirect: redirect,
-        user: {
-          id: user.id,
-          username: user.username,
-          isAdmin: Boolean(user.is_admin),
-          role: user.role
-        }
+      decodedToken = await auth.verifyIdToken(idToken);
+      console.log('✅ Token verified for user:', decodedToken.uid);
+    } catch (error) {
+      console.error('❌ Invalid token:', error);
+      return res.status(401).json({ 
+        ok: false, 
+        error: 'Token inválido' 
       });
-
-    } finally {
-      if (conn) conn.release();
-      if (pool) await pool.end();
     }
+
+    // Aquí puedes buscar info adicional en MySQL o Firestore si es necesario
+    // Por ahora, devolver info del token
+    const user = {
+      id: decodedToken.uid,
+      email: decodedToken.email,
+      username: decodedToken.email, // O decodedToken.name si está disponible
+      isAdmin: false, // Lógica para determinar admin
+      role: 'user'
+    };
+
+    // Login exitoso - determinar redirect basado en rol
+    const isAdmin = user.isAdmin || user.role === 'admin';
+    const redirect = isAdmin ? '/dashboard' : '/client';
+    
+    return res.status(200).json({
+      ok: true,
+      redirect: redirect,
+      user: user
+    });
 
   } catch (error) {
     console.error('❌ Error en login:', error);
     console.error('Stack trace:', error.stack);
-    
-    // Limpiar conexiones en caso de error
-    try {
-      if (conn) conn.release();
-      if (pool) await pool.end();
-    } catch (cleanupError) {
-      console.error('Error en cleanup:', cleanupError);
-    }
     
     return res.status(500).json({ 
       ok: false, 
