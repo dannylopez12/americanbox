@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     const [orders] = await connection.execute(`
       SELECT
         o.id,
-        o.tracking_number,
+        o.guide,
         o.status,
         o.total,
         o.created_at,
@@ -40,7 +40,7 @@ export default async function handler(req, res) {
         c.name as customer_name,
         c.email as customer_email
       FROM orders o
-      LEFT JOIN customers c ON o.customer_id = c.id
+      LEFT JOIN customers c ON o.user_id = c.user_id
       ORDER BY o.created_at DESC
       LIMIT ?
     `, [limit]);
@@ -52,7 +52,7 @@ export default async function handler(req, res) {
     // Formatear respuesta
     const formattedOrders = orders.map(order => ({
       id: order.id,
-      guide: order.tracking_number || `ORD-${order.id}`,
+      guide: order.guide || `ORD-${order.id}`,
       client: order.customer_name || 'N/A',
       address: 'N/A', // Simplificado
       date: order.created_at,

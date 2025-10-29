@@ -35,12 +35,11 @@ export default async function handler(req, res) {
       SELECT
         v.id,
         v.code,
-        v.discount_type,
-        v.discount_value,
-        v.usage_limit,
-        v.used_count,
-        v.created_at,
-        v.active
+        v.name,
+        v.estab_code,
+        v.point_code,
+        v.seq,
+        v.created_at
       FROM vouchers v
     `;
 
@@ -82,19 +81,13 @@ export default async function handler(req, res) {
     const formattedVouchers = vouchers.map(voucher => ({
       id: voucher.id,
       code: voucher.code,
-      discount_type: voucher.discount_type || 'percentage',
-      discount_value: parseFloat(voucher.discount_value) || 0,
-      min_order_amount: null,
-      max_discount: null,
-      usage_limit: voucher.usage_limit || null,
-      used_count: voucher.used_count || 0,
-      starts_at: null,
-      expires_at: null,
+      name: voucher.name || voucher.code,
+      estab_code: voucher.estab_code,
+      point_code: voucher.point_code,
+      seq: voucher.seq,
       created_at: voucher.created_at,
-      active: voucher.active === 1,
-      description: voucher.code || 'Voucher',
-      is_expired: false,
-      is_used_up: voucher.usage_limit ? voucher.used_count >= voucher.usage_limit : false
+      active: true, // Asumiendo que todos están activos por defecto
+      description: voucher.name || voucher.code
     }));
 
     res.setHeader('Access-Control-Allow-Origin', '*');
